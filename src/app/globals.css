@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+/*
+  PLACEHOLDER BRAND THEME
+  -----------------------
+  Irdi hasn't uploaded PongoLux's real logo/colors yet, so this is a
+  tasteful neutral-luxury placeholder (warm ivory + charcoal + brass accent)
+  standing in until real brand assets arrive. Swap the tokens below —
+  nothing else in the codebase should need to change.
+*/
+
+:root {
+  --background: #faf8f5;
+  --foreground: #1c1917;
+  --surface: #ffffff;
+  --muted: #f0ebe3;
+  --muted-foreground: #6b6459;
+  --border: #e4dcd0;
+  --accent: #a3814f;
+  --accent-foreground: #ffffff;
+  --danger: #b3261e;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-danger: var(--danger);
+  /*
+    System font stacks — see the comment in layout.tsx for why this scaffold
+    doesn't load web fonts from Google. `--font-display` stands in for
+    PongoLux's eventual headline typeface (something like Playfair Display,
+    Canela, or Söhne would suit a luxury resale brand).
+  */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
+    sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-display: Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #171310;
+    --foreground: #f3ede2;
+    --surface: #1f1a15;
+    --muted: #2a2420;
+    --muted-foreground: #b3a898;
+    --border: #38312a;
+    --accent: #c9a66b;
+    --accent-foreground: #171310;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
