@@ -4,14 +4,19 @@ import { db } from "@/db";
 import { orders, orderItems, products, productImages } from "@/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { getOrCreateCartId } from "@/lib/cart-id";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { SHIPPING_INSURANCE_CENTS } from "@/lib/format";
 
-export async function createCheckoutSession(productIds: string[]) {
+export async function createCheckoutSession(
+  productIds: string[],
+  options?: { insured?: boolean }
+) {
   if (productIds.length === 0) {
     return { ok: false as const, message: "Your cart is empty." };
   }
+  const insuranceCents = options?.insured ? SHIPPING_INSURANCE_CENTS : 0;
 
   const cartId = await getOrCreateCartId();
   const session = await auth();
@@ -56,8 +61,8 @@ export async function createCheckoutSession(productIds: string[]) {
       email: session?.user?.email ?? "",
       status: "pending",
       subtotalCents,
-      shippingCents: 0,
-      totalCents: subtotalCents,
+      shippingCents: insuranceCents,
+      totalCents: subtotalCents + insuranceCents,
     })
     .returning({ id: orders.id });
 
@@ -84,16 +89,33 @@ export async function createCheckoutSession(productIds: string[]) {
 
   let checkoutUrl: string | null;
   try {
-    const checkoutSession = await stripe.checkout.sessions.create({
+    const checkoutSession = await getStripe().checkout.sessions.create({
       mode: "payment",
-      line_items: items.map((item) => ({
-        quantity: 1,
-        price_data: {
-          currency: item.currency,
-          unit_amount: item.priceCents,
-          product_data: { name: `${item.brand} ${item.title}` },
-        },
-      })),
+      line_items: [
+        ...items.map((item) => ({
+          quantity: 1,
+          price_data: {
+            currency: item.currency,
+            unit_amount: item.priceCents,
+            product_data: { name: `${item.brand} ${item.title}` },
+          },
+        })),
+        ...(insuranceCents > 0
+          ? [
+              {
+                quantity: 1,
+                price_data: {
+                  currency: items[0].currency,
+                  unit_amount: insuranceCents,
+                  product_data: {
+                    name: "Shipping insurance",
+                    description: "Covers loss or damage in transit",
+                  },
+                },
+              },
+            ]
+          : []),
+      ],
       shipping_address_collection: { allowed_countries: ["US"] },
       phone_number_collection: { enabled: true },
       customer_email: session?.user?.email ?? undefined,

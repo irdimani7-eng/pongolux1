@@ -1,4 +1,4 @@
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { db } from "@/db";
 import { orders, orderItems, products } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   let event: Stripe.Event;
   try {
     if (!signature || !webhookSecret) throw new Error("Missing webhook signature/secret");
-    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    event = getStripe().webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
     console.error("Stripe webhook signature verification failed", err);
     return new Response("Webhook signature verification failed", { status: 400 });
