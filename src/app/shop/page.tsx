@@ -1,6 +1,8 @@
 import { ProductCard } from "@/components/product-card";
 import { ShopFilterBar } from "@/components/shop-filter-bar";
+import { HeroBanner } from "@/components/hero-banner";
 import { listProducts, getFilterOptions } from "@/lib/products";
+import { MARKETING_IMAGES } from "@/lib/marketing-images";
 import type { ShopFilters } from "@/lib/types";
 
 function firstValue(value: string | string[] | undefined) {
@@ -25,27 +27,32 @@ export default async function ShopPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
-      <h1 className="font-(family-name:--font-display) text-3xl">
-        Shop the collection
-      </h1>
+    <div>
+      <HeroBanner
+        imageSrc={MARKETING_IMAGES.shopBanner.src}
+        imageAlt={MARKETING_IMAGES.shopBanner.alt}
+        eyebrow="The collection"
+        title="Shop the collection"
+        subtitle="Every piece is a unique, independently authenticated find — once it's gone, it's gone."
+        size="compact"
+      />
 
-      <div className="mt-6">
+      <div className="mx-auto max-w-6xl px-6 py-12">
         <ShopFilterBar options={options} current={filters} />
-      </div>
 
-      {products.length === 0 ? (
-        <p className="mt-16 text-center text-muted-foreground">
-          No items match those filters yet — try clearing one, or check back
-          soon as new pieces are added regularly.
-        </p>
-      ) : (
-        <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+        {products.length === 0 ? (
+          <p className="mt-16 text-center text-muted-foreground">
+            No items match those filters yet — try clearing one, or check
+            back soon as new pieces are added regularly.
+          </p>
+        ) : (
+          <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
