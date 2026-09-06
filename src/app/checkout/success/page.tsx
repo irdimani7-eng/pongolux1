@@ -45,6 +45,9 @@ export default async function CheckoutSuccessPage({
             {items.map((item) => (
               <li key={item.id}>{item.titleSnapshot}</li>
             ))}
+            {order.shippingCents > 0 && (
+              <li>Shipping insurance — {formatPrice(order.shippingCents)}</li>
+            )}
           </ul>
         </div>
       )}

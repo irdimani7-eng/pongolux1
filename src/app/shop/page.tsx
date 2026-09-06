@@ -1,25 +1,28 @@
 import { ProductCard } from "@/components/product-card";
-import { listProducts } from "@/lib/products";
-import Link from "next/link";
-import clsx from "clsx";
+import { ShopFilterBar } from "@/components/shop-filter-bar";
+import { listProducts, getFilterOptions } from "@/lib/products";
+import type { ShopFilters } from "@/lib/types";
 
-const CATEGORIES = [
-  { value: undefined, label: "All" },
-  { value: "handbag", label: "Handbags" },
-  { value: "wallet", label: "Wallets" },
-  { value: "accessory", label: "Accessories" },
-] as const;
+function firstValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 export default async function ShopPage({
   searchParams,
 }: PageProps<"/shop">) {
-  const { category } = await searchParams;
-  const activeCategory = Array.isArray(category) ? category[0] : category;
+  const params = await searchParams;
+  const filters: ShopFilters = {
+    brand: firstValue(params.brand),
+    category: firstValue(params.category),
+    color: firstValue(params.color),
+    condition: firstValue(params.condition),
+    priceRange: firstValue(params.priceRange),
+  };
 
-  const products = await listProducts({
-    category: activeCategory,
-    includeSold: true,
-  });
+  const [products, options] = await Promise.all([
+    listProducts({ ...filters, includeSold: true }),
+    getFilterOptions(),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
@@ -27,27 +30,14 @@ export default async function ShopPage({
         Shop the collection
       </h1>
 
-      <div className="mt-6 flex flex-wrap gap-2">
-        {CATEGORIES.map((c) => (
-          <Link
-            key={c.label}
-            href={c.value ? `/shop?category=${c.value}` : "/shop"}
-            className={clsx(
-              "rounded-full border px-4 py-1.5 text-sm transition-colors",
-              activeCategory === c.value
-                ? "border-foreground bg-foreground text-background"
-                : "border-border hover:bg-muted"
-            )}
-          >
-            {c.label}
-          </Link>
-        ))}
+      <div className="mt-6">
+        <ShopFilterBar options={options} current={filters} />
       </div>
 
       {products.length === 0 ? (
         <p className="mt-16 text-center text-muted-foreground">
-          Nothing here yet — check back soon, new pieces are added
-          regularly.
+          No items match those filters yet — try clearing one, or check back
+          soon as new pieces are added regularly.
         </p>
       ) : (
         <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">

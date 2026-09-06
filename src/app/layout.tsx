@@ -12,6 +12,9 @@ import "./globals.css";
 // if reaching fonts.googleapis.com is fine in your deployment target).
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  ),
   title: {
     default: "PongoLux — Authenticated Designer Handbags",
     template: "%s — PongoLux",

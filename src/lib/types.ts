@@ -1,9 +1,11 @@
 export type ProductListItem = {
   id: string;
-  slug: string;
+  sku: string;
   brand: string;
   model: string;
   title: string;
+  color: string;
+  category: string;
   condition: string;
   priceCents: number;
   currency: string;
@@ -13,7 +15,6 @@ export type ProductListItem = {
 
 export type ProductDetail = ProductListItem & {
   description: string;
-  category: string;
   isConsignment: boolean;
   images: { url: string; alt: string }[];
   authentication: {
@@ -21,4 +22,17 @@ export type ProductDetail = ProductListItem & {
     authenticatedBy: string;
     certificateUrl: string | null;
   } | null;
+};
+
+export type ShopFilters = {
+  brand?: string;
+  category?: string;
+  color?: string;
+  condition?: string;
+  priceRange?: string;
+};
+
+export type FilterOptions = {
+  brands: string[];
+  colors: string[];
 };

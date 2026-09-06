@@ -5,7 +5,7 @@ import { persist } from "zustand/middleware";
 
 export type CartItem = {
   productId: string;
-  slug: string;
+  sku: string;
   title: string;
   brand: string;
   priceCents: number;
@@ -35,6 +35,8 @@ export const useCartStore = create<CartState>()(
         set({ items: get().items.filter((i) => i.productId !== productId) }),
       clear: () => set({ items: [] }),
     }),
-    { name: "pongolux-cart" }
+    // Bumped from "pongolux-cart" when CartItem's `slug` field was renamed to
+    // `sku` — avoids old browsers replaying a stale shape into this store.
+    { name: "pongolux-cart-v2" }
   )
 );

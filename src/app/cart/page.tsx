@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/lib/cart-store";
 import { useCartHydrated } from "@/lib/use-hydrated";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, SHIPPING_INSURANCE_CENTS } from "@/lib/format";
 import { releaseProductAction } from "@/lib/actions/cart";
 import { createCheckoutSession } from "@/lib/actions/checkout";
 
@@ -15,8 +15,10 @@ export default function CartPage() {
   const removeItem = useCartStore((s) => s.removeItem);
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [insured, setInsured] = useState(false);
 
   const subtotalCents = items.reduce((sum, i) => sum + i.priceCents, 0);
+  const totalCents = subtotalCents + (insured ? SHIPPING_INSURANCE_CENTS : 0);
 
   if (!hydrated) return null;
 
@@ -59,7 +61,7 @@ export default function CartPage() {
                 <div className="text-xs uppercase tracking-wide text-muted-foreground">
                   {item.brand}
                 </div>
-                <Link href={`/product/${item.slug}`} className="font-medium hover:text-accent">
+                <Link href={`/product/${item.sku}`} className="font-medium hover:text-accent">
                   {item.title}
                 </Link>
               </div>
@@ -82,12 +84,36 @@ export default function CartPage() {
         ))}
       </ul>
 
-      <div className="mt-8 flex items-center justify-between border-t border-border pt-4 text-lg">
-        <span>Subtotal</span>
-        <span>{formatPrice(subtotalCents)}</span>
+      <div className="mt-8 space-y-3 border-t border-border pt-4">
+        <div className="flex items-center justify-between text-sm">
+          <span>Subtotal</span>
+          <span>{formatPrice(subtotalCents)}</span>
+        </div>
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>Shipping</span>
+          <span>Free</span>
+        </div>
+        <label className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3 text-sm">
+          <input
+            type="checkbox"
+            checked={insured}
+            onChange={(e) => setInsured(e.target.checked)}
+            className="mt-0.5"
+          />
+          <span>
+            Add shipping insurance — {formatPrice(SHIPPING_INSURANCE_CENTS)}
+            <span className="block text-xs text-muted-foreground">
+              Covers loss or damage in transit. Optional.
+            </span>
+          </span>
+        </label>
+        <div className="flex items-center justify-between border-t border-border pt-3 text-lg">
+          <span>Total</span>
+          <span>{formatPrice(totalCents)}</span>
+        </div>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        Shipping and any applicable tax are calculated at checkout.
+        Any applicable tax is calculated at checkout.
       </p>
 
       {error && <p className="mt-3 text-sm text-danger">{error}</p>}
@@ -98,7 +124,8 @@ export default function CartPage() {
           setError(null);
           startTransition(async () => {
             const result = await createCheckoutSession(
-              items.map((i) => i.productId)
+              items.map((i) => i.productId),
+              { insured }
             );
             // A successful call redirects and never resolves here; if we do
             // get a result back, checkout couldn't proceed.

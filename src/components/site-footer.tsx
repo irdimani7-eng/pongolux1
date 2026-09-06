@@ -1,16 +1,15 @@
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-muted/40">
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 text-sm sm:grid-cols-2 md:grid-cols-4">
         <div>
-          <div className="font-(family-name:--font-display) text-xl">
-            PongoLux
-          </div>
+          <Logo />
           <p className="mt-3 max-w-xs text-muted-foreground">
             Authenticated designer handbags, resold with confidence. Based in
-            the United States.
+            Chicago, IL.
           </p>
         </div>
 
@@ -47,23 +46,24 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <h3 className="font-medium">Account</h3>
+          <h3 className="font-medium">Contact</h3>
           <ul className="mt-3 space-y-2 text-muted-foreground">
             <li>
-              <Link href="/account" className="hover:text-accent">
-                Order history
-              </Link>
+              <a href="mailto:support@pongolux.com" className="hover:text-accent">
+                support@pongolux.com
+              </a>
             </li>
             <li>
-              <Link href="/login" className="hover:text-accent">
-                Sign in
-              </Link>
+              <a href="tel:+13127750792" className="hover:text-accent">
+                (312) 775-0792
+              </a>
             </li>
+            <li>Chicago, IL</li>
           </ul>
         </div>
       </div>
       <div className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} PongoLux. All rights reserved.
+        © {new Date().getFullYear()} PONGOLUX LLC. All rights reserved.
       </div>
     </footer>
   );

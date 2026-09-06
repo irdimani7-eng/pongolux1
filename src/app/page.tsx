@@ -43,11 +43,11 @@ export default async function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <Truck className="size-5 shrink-0" strokeWidth={1.5} />
-            <span>Insured shipping across the US</span>
+            <span>Free shipping, optional $20 insurance</span>
           </div>
           <div className="flex items-center gap-3">
             <Undo2 className="size-5 shrink-0" strokeWidth={1.5} />
-            <span>Easy returns within 7 days</span>
+            <span>Returns within 3 days</span>
           </div>
         </div>
       </section>
@@ -83,8 +83,9 @@ export default async function HomePage() {
               01
             </div>
             <p className="mt-2 text-muted-foreground">
-              Every handbag is inspected in person against brand-specific
-              hardware, stitching, materials, and date-code markers.
+              Every bag is scanned with Entrupy, whose AI-powered technology
+              checks material and manufacturing signatures against millions
+              of verified reference points.
             </p>
           </div>
           <div>
@@ -92,8 +93,9 @@ export default async function HomePage() {
               02
             </div>
             <p className="mt-2 text-muted-foreground">
-              A written authentication record is created and attached to the
-              listing, naming the method and expert or service used.
+              Our in-house authentication team then performs a hands-on
+              review — hardware, stitching, materials, and date codes —
+              before anything is listed.
             </p>
           </div>
           <div>
@@ -101,7 +103,7 @@ export default async function HomePage() {
               03
             </div>
             <p className="mt-2 text-muted-foreground">
-              If an item ever fails a re-authentication, we refund it in
+              If an item ever fails re-authentication, we refund it in
               full — that guarantee is the foundation of PongoLux.
             </p>
           </div>

@@ -1,7 +1,13 @@
 import { db } from "@/db";
 import { products, productImages, authenticationRecords } from "@/db/schema";
-import { and, asc, desc, eq, ne } from "drizzle-orm";
-import type { ProductDetail, ProductListItem } from "@/lib/types";
+import { and, asc, desc, eq, gte, lt, ne } from "drizzle-orm";
+import { PRICE_RANGES } from "@/lib/format";
+import type {
+  ProductDetail,
+  ProductListItem,
+  ShopFilters,
+  FilterOptions,
+} from "@/lib/types";
 
 async function primaryImageUrl(productId: string) {
   const [image] = await db
@@ -13,15 +19,21 @@ async function primaryImageUrl(productId: string) {
   return image?.url ?? null;
 }
 
-export async function listProducts(filters?: {
-  category?: string;
-  brand?: string;
-  includeSold?: boolean;
-}): Promise<ProductListItem[]> {
+export async function listProducts(
+  filters?: ShopFilters & { includeSold?: boolean }
+): Promise<ProductListItem[]> {
+  const priceRange = PRICE_RANGES.find((r) => r.value === filters?.priceRange);
+
   const conditions = [
     filters?.includeSold ? undefined : ne(products.status, "archived"),
     filters?.category ? eq(products.category, filters.category as never) : undefined,
     filters?.brand ? eq(products.brand, filters.brand) : undefined,
+    filters?.color ? eq(products.color, filters.color) : undefined,
+    filters?.condition
+      ? eq(products.condition, filters.condition as never)
+      : undefined,
+    priceRange ? gte(products.priceCents, priceRange.min) : undefined,
+    priceRange?.max != null ? lt(products.priceCents, priceRange.max) : undefined,
   ].filter((c): c is NonNullable<typeof c> => Boolean(c));
 
   const rows = await db
@@ -33,10 +45,12 @@ export async function listProducts(filters?: {
   return Promise.all(
     rows.map(async (product) => ({
       id: product.id,
-      slug: product.slug,
+      sku: product.sku,
       brand: product.brand,
       model: product.model,
       title: product.title,
+      color: product.color,
+      category: product.category,
       condition: product.condition,
       priceCents: product.priceCents,
       currency: product.currency,
@@ -46,13 +60,27 @@ export async function listProducts(filters?: {
   );
 }
 
-export async function getProductBySlug(
-  slug: string
+/** Distinct brand/color values currently in the catalog, for the shop filter
+ * dropdowns — so we never show an option with zero matching items. */
+export async function getFilterOptions(): Promise<FilterOptions> {
+  const rows = await db
+    .select({ brand: products.brand, color: products.color })
+    .from(products)
+    .where(ne(products.status, "archived"));
+
+  return {
+    brands: [...new Set(rows.map((r) => r.brand))].sort(),
+    colors: [...new Set(rows.map((r) => r.color))].sort(),
+  };
+}
+
+export async function getProductBySku(
+  sku: string
 ): Promise<ProductDetail | null> {
   const [product] = await db
     .select()
     .from(products)
-    .where(eq(products.slug, slug))
+    .where(eq(products.sku, sku))
     .limit(1);
   if (!product) return null;
 
@@ -74,11 +102,12 @@ export async function getProductBySlug(
 
   return {
     id: product.id,
-    slug: product.slug,
+    sku: product.sku,
     brand: product.brand,
     model: product.model,
     title: product.title,
     description: product.description,
+    color: product.color,
     category: product.category,
     condition: product.condition,
     priceCents: product.priceCents,

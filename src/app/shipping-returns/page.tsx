@@ -1,3 +1,5 @@
+import { formatPrice, SHIPPING_INSURANCE_CENTS } from "@/lib/format";
+
 export const metadata = { title: "Shipping & Returns" };
 
 export default function ShippingReturnsPage() {
@@ -7,17 +9,55 @@ export default function ShippingReturnsPage() {
         Shipping &amp; Returns
       </h1>
 
-      <div className="prose-sm mt-6 space-y-4 text-sm text-muted-foreground">
-        <p>
-          <strong className="text-foreground">Placeholder content —</strong>{" "}
-          replace this page with PongoLux&apos;s real shipping carriers, handling
-          time, insurance coverage, and return window before launch.
-        </p>
-        <p>
-          Since every item is one-of-one, we recommend a clear, generous
-          return window (commonly 3–7 days) with re-authentication required
-          before a refund is issued, to protect against fraudulent returns.
-        </p>
+      <div className="mt-8 space-y-8 text-sm">
+        <section>
+          <h2 className="font-medium">Shipping</h2>
+          <p className="mt-2 text-muted-foreground">
+            Shipping is free on every order within the United States. Orders
+            ship within 1–2 business days of payment — every item is
+            authenticated before it&apos;s ever listed, so there&apos;s no additional
+            wait for verification after you buy. You&apos;ll receive tracking by
+            email as soon as your order ships. At checkout you can add
+            optional shipping insurance for {formatPrice(SHIPPING_INSURANCE_CENTS)},
+            which covers the full value of your item against loss or damage
+            in transit. We currently ship within the US only.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-medium">Returns</h2>
+          <p className="mt-2 text-muted-foreground">
+            Because every piece is one-of-one, we offer a 3-day return
+            window from the date of delivery. To be eligible, an item must
+            be unworn and unused, with all original tags, dust bags, and
+            authentication documentation included, and it must pass
+            re-authentication once we receive it back.
+          </p>
+          <p className="mt-2 text-muted-foreground">
+            Return shipping is the buyer&apos;s responsibility unless the item
+            arrives significantly not as described or fails
+            re-authentication — in that case, PongoLux covers return
+            shipping and refunds the full purchase price, including any
+            shipping insurance paid. Approved refunds are issued to the
+            original payment method within 3–5 business days of us
+            receiving and re-authenticating the returned item.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="font-medium">Questions</h2>
+          <p className="mt-2 text-muted-foreground">
+            Reach us at{" "}
+            <a href="mailto:support@pongolux.com" className="text-foreground hover:text-accent">
+              support@pongolux.com
+            </a>{" "}
+            or{" "}
+            <a href="tel:+13127750792" className="text-foreground hover:text-accent">
+              (312) 775-0792
+            </a>
+            .
+          </p>
+        </section>
       </div>
     </div>
   );

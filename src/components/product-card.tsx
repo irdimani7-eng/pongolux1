@@ -8,7 +8,7 @@ export function ProductCard({ product }: { product: ProductListItem }) {
 
   return (
     <Link
-      href={`/product/${product.slug}`}
+      href={`/product/${product.sku}`}
       className="group block"
       aria-disabled={sold}
     >

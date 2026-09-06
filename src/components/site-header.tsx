@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { CartBadge } from "@/components/cart-badge";
+import { Logo } from "@/components/logo";
 
 export async function SiteHeader() {
   const session = await auth();
@@ -8,11 +9,8 @@ export async function SiteHeader() {
   return (
     <header className="border-b border-border">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link
-          href="/"
-          className="font-(family-name:--font-display) text-2xl tracking-wide"
-        >
-          PongoLux
+        <Link href="/">
+          <Logo />
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm md:flex">

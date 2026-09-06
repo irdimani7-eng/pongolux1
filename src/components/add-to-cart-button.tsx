@@ -51,7 +51,7 @@ export function AddToCartButton({ product }: { product: ProductDetail }) {
             }
             addItem({
               productId: product.id,
-              slug: product.slug,
+              sku: product.sku,
               title: product.title,
               brand: product.brand,
               priceCents: product.priceCents,

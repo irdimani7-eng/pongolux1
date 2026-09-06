@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Raw incoming product photo drops (before scripts/import-products.ts copies
+# the ones we need into public/products/). Not meant to live in the repo --
+# the *processed* copies under public/products are what ships.
+/product-photos/

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getProductBySlug } from "@/lib/products";
+import { getProductBySku } from "@/lib/products";
 import { formatPrice, CONDITION_LABELS, AUTH_METHOD_LABELS } from "@/lib/format";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ShieldCheck } from "lucide-react";
@@ -8,9 +8,9 @@ import type { Metadata } from "next";
 
 export async function generateMetadata({
   params,
-}: PageProps<"/product/[slug]">): Promise<Metadata> {
-  const { slug } = await params;
-  const product = await getProductBySlug(slug);
+}: PageProps<"/product/[sku]">): Promise<Metadata> {
+  const { sku } = await params;
+  const product = await getProductBySku(sku);
   if (!product) return {};
   return {
     title: `${product.brand} ${product.title}`,
@@ -20,9 +20,9 @@ export async function generateMetadata({
 
 export default async function ProductPage({
   params,
-}: PageProps<"/product/[slug]">) {
-  const { slug } = await params;
-  const product = await getProductBySlug(slug);
+}: PageProps<"/product/[sku]">) {
+  const { sku } = await params;
+  const product = await getProductBySku(sku);
   if (!product) notFound();
 
   return (
@@ -75,6 +75,10 @@ export default async function ProductPage({
             <dd>{CONDITION_LABELS[product.condition] ?? product.condition}</dd>
             <dt className="text-muted-foreground">Model</dt>
             <dd>{product.model}</dd>
+            <dt className="text-muted-foreground">Color</dt>
+            <dd>{product.color}</dd>
+            <dt className="text-muted-foreground">SKU</dt>
+            <dd>{product.sku}</dd>
             {product.isConsignment && (
               <>
                 <dt className="text-muted-foreground">Listing type</dt>
@@ -93,10 +97,12 @@ export default async function ProductPage({
               <div>
                 <p className="font-medium">Authenticity verified</p>
                 <p className="mt-0.5 text-muted-foreground">
-                  Verified by{" "}
-                  {AUTH_METHOD_LABELS[product.authentication.method] ??
-                    product.authentication.method}{" "}
-                  ({product.authentication.authenticatedBy}).
+                  {product.authentication.method === "entrupy"
+                    ? `Scanned and verified with Entrupy, then authenticated in-house by ${product.authentication.authenticatedBy}.`
+                    : `Verified by ${
+                        AUTH_METHOD_LABELS[product.authentication.method] ??
+                        product.authentication.method
+                      } (${product.authentication.authenticatedBy}).`}
                 </p>
               </div>
             </div>

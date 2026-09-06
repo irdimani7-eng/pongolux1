@@ -98,11 +98,14 @@ export const products = pgTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    slug: text("slug").notNull(),
+    // The SKU is Irdi's own inventory identifier and doubles as the
+    // product page's URL segment (/product/<sku>) — see src/lib/products.ts.
+    sku: text("sku").notNull(),
     brand: text("brand").notNull(),
     model: text("model").notNull(),
     title: text("title").notNull(),
     description: text("description").notNull().default(""),
+    color: text("color").notNull(),
     category: text("category", {
       enum: ["handbag", "wallet", "accessory", "other"],
     })
@@ -126,7 +129,12 @@ export const products = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("product_slug_idx").on(table.slug)]
+  (table) => [
+    uniqueIndex("product_sku_idx").on(table.sku),
+    // Titles must be unique per listing (each bag is one-of-one) — if two
+    // similar items collide, add a distinguishing detail to the title.
+    uniqueIndex("product_title_idx").on(table.title),
+  ]
 );
 
 export const productImages = pgTable(
