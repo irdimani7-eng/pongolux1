@@ -110,7 +110,10 @@ export const ContactFormSchema = z.object({
   firstName: z.string().trim().min(1, "Enter your first name."),
   lastName: z.string().trim().min(1, "Enter your last name."),
   email: z.email("Please enter a valid email."),
-  message: z.string().trim().min(5, "Enter a message."),
+  message: z
+    .string()
+    .trim()
+    .min(5, "Please enter a message of at least 5 characters."),
 });
 
 export const ShippingAddressSchema = z.object({
