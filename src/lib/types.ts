@@ -8,6 +8,8 @@ export type ProductListItem = {
   category: string;
   condition: string;
   priceCents: number;
+  /** Pre-markdown price; present and > priceCents only when on sale. */
+  compareAtPriceCents: number | null;
   currency: string;
   status: string;
   imageUrl: string | null;

@@ -13,21 +13,27 @@ export async function SiteHeader() {
           <Logo />
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm md:flex">
+        <nav className="hidden items-center gap-7 text-sm md:flex">
           <Link href="/shop" className="hover:text-accent transition-colors">
             Shop
           </Link>
           <Link
-            href="/shop?category=handbag"
+            href="/shop/price-drops"
             className="hover:text-accent transition-colors"
           >
-            Handbags
+            New Price Drops
           </Link>
           <Link
-            href="/#authentication"
+            href="/shop/most-wanted"
             className="hover:text-accent transition-colors"
           >
-            Our Authentication Process
+            Most Wanted
+          </Link>
+          <Link href="/about" className="hover:text-accent transition-colors">
+            About
+          </Link>
+          <Link href="/contact" className="hover:text-accent transition-colors">
+            Contact
           </Link>
         </nav>
 

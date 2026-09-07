@@ -14,7 +14,7 @@ export default function ShippingReturnsPage() {
           <h2 className="font-medium">Shipping</h2>
           <p className="mt-2 text-muted-foreground">
             Shipping is free on every order within the United States. Orders
-            ship within 1–2 business days of payment — every item is
+            ship within 3 business days of payment — every item is
             authenticated before it&apos;s ever listed, so there&apos;s no additional
             wait for verification after you buy. You&apos;ll receive tracking by
             email as soon as your order ships. At checkout you can add

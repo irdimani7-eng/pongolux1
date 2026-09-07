@@ -22,9 +22,16 @@ export default async function ShopPage({
   };
 
   const [products, options] = await Promise.all([
-    listProducts({ ...filters, includeSold: true }),
+    listProducts(filters),
     getFilterOptions(),
   ]);
+
+  // No matches for the current filters — show a few other available pieces
+  // instead of leaving the page empty, so the visit isn't a dead end.
+  const suggestions =
+    products.length === 0
+      ? (await listProducts({ excludeSold: true })).slice(0, 4)
+      : [];
 
   return (
     <div>
@@ -41,10 +48,24 @@ export default async function ShopPage({
         <ShopFilterBar options={options} current={filters} />
 
         {products.length === 0 ? (
-          <p className="mt-16 text-center text-muted-foreground">
-            No items match those filters yet — try clearing one, or check
-            back soon as new pieces are added regularly.
-          </p>
+          <div className="mt-16">
+            <p className="text-center text-muted-foreground">
+              No items match those filters yet — try clearing one, or check
+              back soon as new pieces are added regularly.
+            </p>
+            {suggestions.length > 0 && (
+              <div className="mt-10">
+                <h2 className="text-center text-sm font-medium uppercase tracking-wide text-muted-foreground">
+                  You might like
+                </h2>
+                <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+                  {suggestions.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
             {products.map((product) => (

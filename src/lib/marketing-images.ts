@@ -32,10 +32,22 @@ export const MARKETING_IMAGES = {
     alt: "Woman carrying a leather designer handbag",
     credit: "Unsplash",
   },
-  /** Authentication section — tactile, close-up leather/craftsmanship shot. */
+  /** Authentication section — a woman closely examining a handbag. */
   authenticationDetail: {
-    src: "https://images.unsplash.com/photo-1647960514922-052047430407?w=1400&q=80&auto=format&fit=crop",
-    alt: "Close-up detail of fine leather material",
+    src: "https://images.unsplash.com/photo-1729285396771-516d25f79374?w=1400&q=80&auto=format&fit=crop",
+    alt: "A woman closely examining a handbag on a table",
+    credit: "Unsplash",
+  },
+  /** /shop/price-drops header banner. */
+  priceDropsBanner: {
+    src: "https://images.unsplash.com/photo-1589363460779-cd717d2ed8fa?w=2000&q=80&auto=format&fit=crop",
+    alt: "A minimalist leather sling bag",
+    credit: "Unsplash",
+  },
+  /** /shop/most-wanted header banner. */
+  mostWantedBanner: {
+    src: "https://images.unsplash.com/photo-1575202332411-b01fe9ace7a8?w=2000&q=80&auto=format&fit=crop",
+    alt: "A leather handbag styled with eyeglasses and books",
     credit: "Unsplash",
   },
 } as const;

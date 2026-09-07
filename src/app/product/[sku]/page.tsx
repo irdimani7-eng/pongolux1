@@ -1,8 +1,8 @@
-import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getProductBySku } from "@/lib/products";
+import { getProductBySku, isOnSale } from "@/lib/products";
 import { formatPrice, CONDITION_LABELS, AUTH_METHOD_LABELS } from "@/lib/format";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { ProductGallery } from "@/components/product-gallery";
 import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -24,40 +24,15 @@ export default async function ProductPage({
   const { sku } = await params;
   const product = await getProductBySku(sku);
   if (!product) notFound();
+  const onSale = product.status !== "sold" && isOnSale(product);
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
       <div className="grid gap-10 lg:grid-cols-2">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
-          {(product.images.length > 0
-            ? product.images
-            : [{ url: "", alt: "" }]
-          ).map((image, i) => (
-            <div
-              key={i}
-              className={
-                i === 0
-                  ? "relative col-span-2 aspect-[4/5] overflow-hidden rounded-lg bg-muted"
-                  : "relative aspect-square overflow-hidden rounded-lg bg-muted"
-              }
-            >
-              {image.url ? (
-                <Image
-                  src={image.url}
-                  alt={image.alt || `${product.brand} ${product.title}`}
-                  fill
-                  sizes="(min-width: 1024px) 45vw, 90vw"
-                  className="object-cover"
-                  priority={i === 0}
-                />
-              ) : (
-                <div className="flex size-full items-center justify-center text-muted-foreground">
-                  No image yet
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+        <ProductGallery
+          images={product.images}
+          fallbackAlt={`${product.brand} ${product.title}`}
+        />
 
         <div>
           <div className="text-sm uppercase tracking-wide text-muted-foreground">
@@ -66,8 +41,13 @@ export default async function ProductPage({
           <h1 className="mt-1 font-(family-name:--font-display) text-3xl">
             {product.title}
           </h1>
-          <div className="mt-4 text-2xl">
-            {formatPrice(product.priceCents, product.currency)}
+          <div className="mt-4 flex items-baseline gap-3 text-2xl">
+            <span>{formatPrice(product.priceCents, product.currency)}</span>
+            {onSale && (
+              <span className="text-base text-muted-foreground line-through">
+                {formatPrice(product.compareAtPriceCents!, product.currency)}
+              </span>
+            )}
           </div>
 
           <dl className="mt-6 grid grid-cols-2 gap-y-2 text-sm">

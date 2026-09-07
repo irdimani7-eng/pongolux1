@@ -27,7 +27,9 @@ function fieldsFromFormData(formData: FormData) {
     category: formData.get("category"),
     condition: formData.get("condition"),
     priceUsd: formData.get("priceUsd"),
+    compareAtPriceUsd: formData.get("compareAtPriceUsd"),
     isConsignment: formData.get("isConsignment") === "on",
+    isMostWanted: formData.get("isMostWanted") === "on",
     authMethod: formData.get("authMethod"),
     authenticatedBy: formData.get("authenticatedBy"),
   };
@@ -119,7 +121,12 @@ export async function createProductAction(
         category: data.category,
         condition: data.condition,
         priceCents: Math.round(data.priceUsd * 100),
+        compareAtPriceCents:
+          data.compareAtPriceUsd == null
+            ? null
+            : Math.round(data.compareAtPriceUsd * 100),
         isConsignment: data.isConsignment,
+        isMostWanted: data.isMostWanted,
       })
       .returning({ id: products.id });
     productId = product.id;
@@ -207,7 +214,12 @@ export async function updateProductAction(
         category: data.category,
         condition: data.condition,
         priceCents: Math.round(data.priceUsd * 100),
+        compareAtPriceCents:
+          data.compareAtPriceUsd == null
+            ? null
+            : Math.round(data.compareAtPriceUsd * 100),
         isConsignment: data.isConsignment,
+        isMostWanted: data.isMostWanted,
         status: data.status,
         updatedAt: new Date(),
       })

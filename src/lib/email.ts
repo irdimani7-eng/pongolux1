@@ -4,6 +4,33 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
+export async function sendContactFormEmail(params: {
+  attention: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  message: string;
+}) {
+  if (!resend) {
+    console.warn(
+      "RESEND_API_KEY not set — skipping contact form email from",
+      params.email
+    );
+    return;
+  }
+
+  await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "PongoLux <orders@pongolux.com>",
+    to: "support@pongolux.com",
+    replyTo: params.email,
+    subject: `[Contact — ${params.attention}] ${params.firstName} ${params.lastName}`,
+    html: `<p><strong>Attention:</strong> ${params.attention}</p>
+           <p><strong>From:</strong> ${params.firstName} ${params.lastName} (${params.email})</p>
+           <p><strong>Message:</strong></p>
+           <p>${params.message.replace(/\n/g, "<br />")}</p>`,
+  });
+}
+
 export async function sendOrderConfirmationEmail(params: {
   to: string;
   orderId: string;

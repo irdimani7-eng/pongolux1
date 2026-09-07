@@ -71,9 +71,36 @@ export const ProductFormSchema = z.object({
   priceUsd: z.coerce
     .number()
     .positive("Price must be a positive number."),
+  // Blank = not on sale. When set (and higher than priceUsd), the item
+  // shows a strikethrough price and appears in /shop/price-drops — see
+  // isOnSale() in src/lib/products.ts.
+  compareAtPriceUsd: z
+    .string()
+    .trim()
+    .refine(
+      (v) => v === "" || (!isNaN(Number(v)) && Number(v) > 0),
+      "Compare-at price must be a positive number, or left blank."
+    )
+    .transform((v) => (v === "" ? null : Number(v))),
   isConsignment: z.boolean().default(false),
+  isMostWanted: z.boolean().default(false),
   authMethod: z.enum(AUTH_METHODS),
   authenticatedBy: z.string().trim().min(1, "Enter who authenticated this piece."),
+});
+
+export const CONTACT_ATTENTION_OPTIONS = [
+  "General Inquiry",
+  "Order Support",
+  "Consignment",
+  "Press / Marketing",
+] as const;
+
+export const ContactFormSchema = z.object({
+  attention: z.enum(CONTACT_ATTENTION_OPTIONS),
+  firstName: z.string().trim().min(1, "Enter your first name."),
+  lastName: z.string().trim().min(1, "Enter your last name."),
+  email: z.email("Please enter a valid email."),
+  message: z.string().trim().min(5, "Enter a message."),
 });
 
 export const ShippingAddressSchema = z.object({

@@ -1,10 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { formatPrice, CONDITION_LABELS } from "@/lib/format";
+import { isOnSale } from "@/lib/products";
 import type { ProductListItem } from "@/lib/types";
 
 export function ProductCard({ product }: { product: ProductListItem }) {
   const sold = product.status === "sold";
+  const onSale = !sold && isOnSale(product);
 
   return (
     <Link
@@ -33,6 +35,11 @@ export function ProductCard({ product }: { product: ProductListItem }) {
             </span>
           </div>
         )}
+        {onSale && (
+          <span className="absolute left-2 top-2 rounded-full bg-danger px-2 py-1 text-xs font-medium text-white">
+            Price drop
+          </span>
+        )}
       </div>
       <div className="mt-3 space-y-0.5">
         <div className="text-xs uppercase tracking-wide text-muted-foreground">
@@ -40,7 +47,14 @@ export function ProductCard({ product }: { product: ProductListItem }) {
         </div>
         <div className="text-sm font-medium">{product.title}</div>
         <div className="flex items-center justify-between text-sm">
-          <span>{formatPrice(product.priceCents, product.currency)}</span>
+          <span className="flex items-baseline gap-2">
+            <span>{formatPrice(product.priceCents, product.currency)}</span>
+            {onSale && (
+              <span className="text-xs text-muted-foreground line-through">
+                {formatPrice(product.compareAtPriceCents!, product.currency)}
+              </span>
+            )}
+          </span>
           <span className="text-xs text-muted-foreground">
             {CONDITION_LABELS[product.condition] ?? product.condition}
           </span>

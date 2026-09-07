@@ -35,7 +35,9 @@ type ProductFormProps = {
     category: string;
     condition: string;
     priceUsd: string;
+    compareAtPriceUsd: string;
     isConsignment: boolean;
+    isMostWanted: boolean;
     status: string;
     authMethod: string;
     authenticatedBy: string;
@@ -193,6 +195,25 @@ export function ProductForm({
             className={inputClass}
           />
         </div>
+        <div>
+          <label htmlFor="compareAtPriceUsd" className={labelClass}>
+            Compare-at price (USD)
+          </label>
+          <input
+            id="compareAtPriceUsd"
+            name="compareAtPriceUsd"
+            type="number"
+            min="0"
+            step="0.01"
+            defaultValue={initialValues?.compareAtPriceUsd}
+            placeholder="Leave blank if not on sale"
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Set this higher than the price to show a strikethrough and list
+            this piece under New Price Drops.
+          </p>
+        </div>
         {mode === "edit" && (
           <div>
             <label htmlFor="status" className={labelClass}>
@@ -226,6 +247,18 @@ export function ProductForm({
           />
           <label htmlFor="isConsignment" className="text-sm">
             This is a consignment item
+          </label>
+        </div>
+        <div className="flex items-center gap-2 sm:col-span-2">
+          <input
+            id="isMostWanted"
+            name="isMostWanted"
+            type="checkbox"
+            defaultChecked={initialValues?.isMostWanted}
+            className="size-4"
+          />
+          <label htmlFor="isMostWanted" className="text-sm">
+            Feature this in Most Wanted
           </label>
         </div>
       </div>

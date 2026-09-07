@@ -35,7 +35,12 @@ export default async function EditProductPage({
           category: product.category,
           condition: product.condition,
           priceUsd: (product.priceCents / 100).toFixed(2),
+          compareAtPriceUsd:
+            product.compareAtPriceCents != null
+              ? (product.compareAtPriceCents / 100).toFixed(2)
+              : "",
           isConsignment: product.isConsignment,
+          isMostWanted: product.isMostWanted,
           status: product.status,
           authMethod: product.authentication?.method ?? "entrupy",
           authenticatedBy:

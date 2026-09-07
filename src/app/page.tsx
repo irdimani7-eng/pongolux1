@@ -4,10 +4,10 @@ import { ProductCard } from "@/components/product-card";
 import { HeroBanner } from "@/components/hero-banner";
 import { listProducts } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
-import { ShieldCheck, Truck, Undo2 } from "lucide-react";
+import { ShieldCheck, Truck, Clock } from "lucide-react";
 
 export default async function HomePage() {
-  const featured = (await listProducts()).slice(0, 4);
+  const featured = (await listProducts({ excludeSold: true })).slice(0, 4);
 
   return (
     <div>
@@ -35,11 +35,11 @@ export default async function HomePage() {
           </div>
           <div className="flex items-center gap-3">
             <Truck className="size-5 shrink-0" strokeWidth={1.5} />
-            <span>Free shipping, optional $20 insurance</span>
+            <span>Free shipping</span>
           </div>
           <div className="flex items-center gap-3">
-            <Undo2 className="size-5 shrink-0" strokeWidth={1.5} />
-            <span>Returns within 3 days</span>
+            <Clock className="size-5 shrink-0" strokeWidth={1.5} />
+            <span>Ships within 3 days</span>
           </div>
         </div>
       </section>

@@ -115,6 +115,11 @@ export const products = pgTable(
       enum: ["new", "like_new", "excellent", "very_good", "good", "fair"],
     }).notNull(),
     priceCents: integer("price_cents").notNull(),
+    // The pre-markdown price. When set and higher than priceCents, the item
+    // is "on sale" — drives both the strikethrough price on the product
+    // card/page and the /shop/price-drops collection (see src/lib/products.ts
+    // isOnSale()). Null means never marked down.
+    compareAtPriceCents: integer("compare_at_price_cents"),
     currency: text("currency").notNull().default("usd"),
     status: text("status", {
       enum: ["available", "reserved", "sold", "archived"],
@@ -122,6 +127,9 @@ export const products = pgTable(
       .notNull()
       .default("available"),
     isConsignment: boolean("is_consignment").notNull().default(false),
+    // Manual curation flag for the /shop/most-wanted collection — an admin
+    // picks these, it isn't computed from views/sales.
+    isMostWanted: boolean("is_most_wanted").notNull().default(false),
     // Lazy reservation: set when an item is added to a cart. Treated as
     // available again once this timestamp passes, without needing a cron job.
     reservedUntil: timestamp("reserved_until"),

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { products, productImages, authenticationRecords } from "@/db/schema";
-import { and, asc, desc, eq, gte, lt, ne } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, lt, ne, sql } from "drizzle-orm";
 import { PRICE_RANGES } from "@/lib/format";
 import type {
   ProductDetail,
@@ -8,6 +8,20 @@ import type {
   ShopFilters,
   FilterOptions,
 } from "@/lib/types";
+
+/** An item counts as "on sale" once it has a compare-at price higher than
+ * its current price — one field drives both the strikethrough price display
+ * and the /shop/price-drops collection, so there's no separate flag that
+ * could drift out of sync with the actual prices. */
+export function isOnSale(product: {
+  compareAtPriceCents: number | null;
+  priceCents: number;
+}) {
+  return (
+    product.compareAtPriceCents != null &&
+    product.compareAtPriceCents > product.priceCents
+  );
+}
 
 async function primaryImageUrl(productId: string) {
   const [image] = await db
@@ -20,12 +34,28 @@ async function primaryImageUrl(productId: string) {
 }
 
 export async function listProducts(
-  filters?: ShopFilters & { includeSold?: boolean }
+  filters?: ShopFilters & {
+    /** Excludes sold items entirely (used for the homepage's "Newly
+     * listed" rail — a sold piece shouldn't be the first thing a new
+     * visitor sees). On /shop, leave this false: sold items still show
+     * (so a link to a just-sold piece doesn't 404), just sorted last —
+     * see the ORDER BY below. Archived items are always excluded, on
+     * every page, regardless of this flag. */
+    excludeSold?: boolean;
+    /** /shop/price-drops — only items with a compare-at price above the
+     * current price. */
+    onSaleOnly?: boolean;
+    /** /shop/most-wanted — only admin-curated picks. */
+    mostWantedOnly?: boolean;
+  }
 ): Promise<ProductListItem[]> {
   const priceRange = PRICE_RANGES.find((r) => r.value === filters?.priceRange);
 
   const conditions = [
-    filters?.includeSold ? undefined : ne(products.status, "archived"),
+    ne(products.status, "archived"),
+    filters?.excludeSold ? ne(products.status, "sold") : undefined,
+    filters?.onSaleOnly ? gt(products.compareAtPriceCents, products.priceCents) : undefined,
+    filters?.mostWantedOnly ? eq(products.isMostWanted, true) : undefined,
     filters?.category ? eq(products.category, filters.category as never) : undefined,
     filters?.brand ? eq(products.brand, filters.brand) : undefined,
     filters?.color ? eq(products.color, filters.color) : undefined,
@@ -39,8 +69,13 @@ export async function listProducts(
   const rows = await db
     .select()
     .from(products)
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(products.createdAt));
+    .where(and(...conditions))
+    // Sold items sort after everything else (still reachable, just not
+    // front-and-center), newest first within each group.
+    .orderBy(
+      sql`case when ${products.status} = 'sold' then 1 else 0 end`,
+      desc(products.createdAt)
+    );
 
   return Promise.all(
     rows.map(async (product) => ({
@@ -53,6 +88,7 @@ export async function listProducts(
       category: product.category,
       condition: product.condition,
       priceCents: product.priceCents,
+      compareAtPriceCents: product.compareAtPriceCents,
       currency: product.currency,
       status: product.status,
       imageUrl: await primaryImageUrl(product.id),
@@ -111,6 +147,7 @@ export async function getProductBySku(
     category: product.category,
     condition: product.condition,
     priceCents: product.priceCents,
+    compareAtPriceCents: product.compareAtPriceCents,
     currency: product.currency,
     status: product.status,
     isConsignment: product.isConsignment,

@@ -8,6 +8,13 @@
       "when": 1788734986216,
       "tag": "0000_faulty_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788741504471,
+      "tag": "0001_stiff_maggott",
+      "breakpoints": true
     }
   ]
 }
