@@ -56,6 +56,15 @@ export async function POST(req: Request) {
       shippingAddressId = address?.id;
     }
 
+    // If Stripe Tax was on for this session, total_details.amount_tax and
+    // amount_total are the authoritative post-tax figures — replace our
+    // pre-tax estimate (subtotal + shipping, computed before Stripe
+    // calculated anything) with what was actually charged. For orders
+    // placed with tax disabled, amount_tax is absent/0 and amount_total
+    // just matches what we already had.
+    const taxCents = session.total_details?.amount_tax ?? 0;
+    const totalCents = session.amount_total ?? order.totalCents;
+
     await db
       .update(orders)
       .set({
@@ -65,6 +74,8 @@ export async function POST(req: Request) {
             ? session.payment_intent
             : session.payment_intent?.id,
         email: session.customer_details?.email ?? order.email,
+        taxCents,
+        totalCents,
         ...(shippingAddressId ? { shippingAddressId } : {}),
       })
       .where(eq(orders.id, orderId));
@@ -86,7 +97,8 @@ export async function POST(req: Request) {
       await sendOrderConfirmationEmail({
         to: order.email,
         orderId: order.id,
-        totalCents: order.totalCents,
+        totalCents,
+        taxCents,
       });
     }
   }

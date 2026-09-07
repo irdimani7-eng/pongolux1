@@ -91,6 +91,10 @@ export async function getAdminStats() {
     .select({
       total: sql<number>`count(*)`,
       paidRevenueCents: sql<number>`coalesce(sum(${orders.totalCents}) filter (where ${orders.status} in ('paid', 'fulfilled')), 0)`,
+      // Tax collected via Stripe Tax (0 for any order placed before
+      // STRIPE_TAX_ENABLED was turned on) — the figure to hand off when
+      // filing/remitting, not revenue you keep.
+      taxCollectedCents: sql<number>`coalesce(sum(${orders.taxCents}) filter (where ${orders.status} in ('paid', 'fulfilled')), 0)`,
     })
     .from(orders);
 
@@ -104,6 +108,7 @@ export async function getAdminStats() {
     orders: {
       total: Number(orderCounts?.total ?? 0),
       paidRevenueCents: Number(orderCounts?.paidRevenueCents ?? 0),
+      taxCollectedCents: Number(orderCounts?.taxCollectedCents ?? 0),
     },
   };
 }

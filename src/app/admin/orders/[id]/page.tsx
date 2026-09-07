@@ -46,6 +46,12 @@ export default async function AdminOrderDetailPage({
             <span className="text-muted-foreground">Shipping/insurance</span>
             <span>{formatPrice(order.shippingCents)}</span>
           </div>
+          {order.taxCents > 0 && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Tax</span>
+              <span>{formatPrice(order.taxCents)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-medium">
             <span>Total</span>
             <span>{formatPrice(order.totalCents)}</span>

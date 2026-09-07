@@ -127,6 +127,56 @@ An "Admin" link then appears in the site header for that account. Anyone
 else who visits `/admin` — signed out or signed in as a regular customer —
 is redirected away; there's no way to reach it without that database flag.
 
+## Sales tax
+
+The site can automatically calculate and collect sales tax at checkout via
+**Stripe Tax**, but it's off by default (`STRIPE_TAX_ENABLED` in
+`.env.example` defaults to `"false"`) until you've done the one-time setup
+in Stripe — turning it on before that's done would make every checkout
+fail, since Stripe rejects the request otherwise.
+
+**Why Illinois specifically matters**: being based in Chicago gives
+PongoLux "physical nexus" in Illinois, so IL sales tax applies regardless
+of volume. Other states only come into play once you cross that state's
+*economic* nexus threshold (commonly $100k in sales or 200 transactions/year
+— varies by state) — as a new reseller you're very unlikely to be there yet
+for anywhere but Illinois, but it's worth revisiting as volume grows.
+
+**One-time setup in the Stripe Dashboard** (Settings → Tax):
+1. Set your **origin address** (the business address tax is calculated
+   from).
+2. Add a **registration** for Illinois (Tax → Registrations) — you'll need
+   your IL Certificate of Registration / seller's permit number on hand.
+   Add more states here later if/when you register elsewhere.
+3. Check the **default product tax code** — the default general "tangible
+   goods" category is right for handbags in most states, but double-check
+   it, and separately consider whether the "shipping insurance" line item
+   should carry a different tax code (shipping/handling fees are taxed
+   differently from merchandise in some states — Stripe's tax code list has
+   options for this).
+4. Only after 1–3 are done: set `STRIPE_TAX_ENABLED="true"` in Vercel's
+   environment variables and redeploy.
+
+**What this does and doesn't do**: Stripe Tax calculates the correct rate
+per order (using the customer's shipping address, collected during
+checkout) and shows it as a line item before payment — the code in
+`src/lib/actions/checkout.ts`, the webhook, and `/admin/orders` all already
+handle displaying/storing that tax amount once it's turned on. It does
+**not** file or remit the collected tax to the state for you — that's a
+separate step (manually through the Illinois Department of Revenue, or via
+a service like TaxJar's AutoFile if you want it automated later). The admin
+dashboard home (`/admin`) shows a running "Tax collected" total to make
+that easier to reconcile at filing time.
+
+**Pricing**: Stripe Tax charges 0.5% of the transaction amount for orders
+where tax is calculated (on top of normal Stripe processing fees) —
+double-check current pricing at stripe.com/tax/pricing before enabling, as
+this can change.
+
+**Test before relying on it**: after enabling, place a test purchase (test
+mode) with an Illinois shipping address and confirm tax shows up on the
+Checkout page and on the resulting order in `/admin/orders`.
+
 ## Placeholder content — replace before launch
 
 Several things in this codebase are deliberately placeholder, pending real

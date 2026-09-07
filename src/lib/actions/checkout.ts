@@ -87,10 +87,18 @@ export async function createCheckoutSession(
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
+  // Stripe Tax has to be activated in the Stripe Dashboard (Settings > Tax)
+  // with an origin address and at least one active registration (e.g.
+  // Illinois) before automatic_tax will work — enabling it here without
+  // that setup done would break checkout for every customer, so it's gated
+  // behind an explicit env var. See README.md "Sales tax" section.
+  const taxEnabled = process.env.STRIPE_TAX_ENABLED === "true";
+
   let checkoutUrl: string | null;
   try {
     const checkoutSession = await getStripe().checkout.sessions.create({
       mode: "payment",
+      ...(taxEnabled ? { automatic_tax: { enabled: true } } : {}),
       line_items: [
         ...items.map((item) => ({
           quantity: 1,
@@ -131,9 +139,22 @@ export async function createCheckoutSession(
 
     checkoutUrl = checkoutSession.url;
   } catch (err) {
-    // Most likely cause during setup: STRIPE_SECRET_KEY is a placeholder or
-    // missing. Surface a friendly message instead of a framework error page.
-    console.error("Stripe checkout session creation failed", err);
+    // Most likely causes during setup: STRIPE_SECRET_KEY is a placeholder or
+    // missing, or (if STRIPE_TAX_ENABLED=true) Stripe Tax hasn't actually
+    // been activated in the Dashboard yet. Surface a friendly message to the
+    // customer either way, but log something actionable for us.
+    if (
+      taxEnabled &&
+      err instanceof Error &&
+      /tax/i.test(err.message)
+    ) {
+      console.error(
+        "Stripe checkout session creation failed — STRIPE_TAX_ENABLED is true but Stripe Tax may not be activated in the Dashboard yet (Settings > Tax > origin address + registrations). Original error:",
+        err
+      );
+    } else {
+      console.error("Stripe checkout session creation failed", err);
+    }
     return {
       ok: false as const,
       message:

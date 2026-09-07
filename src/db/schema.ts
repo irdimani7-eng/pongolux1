@@ -219,6 +219,13 @@ export const orders = pgTable("order", {
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   subtotalCents: integer("subtotal_cents").notNull(),
   shippingCents: integer("shipping_cents").notNull().default(0),
+  // Set from Stripe Tax's actual calculation once the webhook confirms
+  // payment (see STRIPE_TAX_ENABLED in checkout.ts) — 0 until then, and
+  // permanently 0 for any order placed before tax collection was turned on.
+  taxCents: integer("tax_cents").notNull().default(0),
+  // Pre-tax at order creation (subtotal + shipping); overwritten with
+  // Stripe's authoritative charged amount (including tax) once payment is
+  // confirmed via webhook.
   totalCents: integer("total_cents").notNull(),
   shippingAddressId: text("shipping_address_id").references(
     () => addresses.id

@@ -97,8 +97,8 @@ export function SiteFooter() {
               </a>
             </li>
             <li>
-              <a href="tel:+13127750792" className="hover:text-accent">
-                (312) 775-0792
+              <a href="tel:+13127740792" className="hover:text-accent">
+                (312) 774-0792
               </a>
             </li>
             <li>Chicago, IL</li>

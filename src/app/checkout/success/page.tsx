@@ -4,6 +4,7 @@ import { orders, orderItems } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { formatPrice } from "@/lib/format";
 import { ClearCartOnMount } from "@/components/clear-cart-on-mount";
+import { getStripe } from "@/lib/stripe";
 import { CheckCircle2 } from "lucide-react";
 
 export default async function CheckoutSuccessPage({
@@ -22,6 +23,28 @@ export default async function CheckoutSuccessPage({
         .where(eq(orderItems.orderId, order.id))
     : [];
 
+  // The webhook that stamps the real (post-tax) total onto the order can
+  // lag a moment behind this redirect, so read the totals straight from
+  // Stripe here rather than showing a stale pre-tax number right after
+  // checkout. Falls back to the DB row if the session can't be fetched
+  // (e.g. an old order, or Stripe briefly unreachable).
+  let taxCents = order?.taxCents ?? 0;
+  let totalCents = order?.totalCents ?? 0;
+  if (order?.stripeCheckoutSessionId) {
+    try {
+      const session = await getStripe().checkout.sessions.retrieve(
+        order.stripeCheckoutSessionId
+      );
+      taxCents = session.total_details?.amount_tax ?? taxCents;
+      totalCents = session.amount_total ?? totalCents;
+    } catch (err) {
+      console.error(
+        "Couldn't fetch Stripe session for checkout success totals; falling back to DB values",
+        err
+      );
+    }
+  }
+
   return (
     <div className="mx-auto max-w-xl px-6 py-20 text-center">
       <ClearCartOnMount />
@@ -39,7 +62,7 @@ export default async function CheckoutSuccessPage({
         <div className="mt-8 rounded-lg border border-border p-4 text-left text-sm">
           <div className="flex justify-between font-medium">
             <span>Order #{order.id.slice(0, 8)}</span>
-            <span>{formatPrice(order.totalCents)}</span>
+            <span>{formatPrice(totalCents)}</span>
           </div>
           <ul className="mt-3 space-y-1 text-muted-foreground">
             {items.map((item) => (
@@ -48,6 +71,7 @@ export default async function CheckoutSuccessPage({
             {order.shippingCents > 0 && (
               <li>Shipping insurance — {formatPrice(order.shippingCents)}</li>
             )}
+            {taxCents > 0 && <li>Tax — {formatPrice(taxCents)}</li>}
           </ul>
         </div>
       )}

@@ -35,6 +35,7 @@ export async function sendOrderConfirmationEmail(params: {
   to: string;
   orderId: string;
   totalCents: number;
+  taxCents?: number;
 }) {
   if (!resend) {
     console.warn(
@@ -44,12 +45,18 @@ export async function sendOrderConfirmationEmail(params: {
     return;
   }
 
+  const taxLine =
+    params.taxCents && params.taxCents > 0
+      ? `<p>Includes tax: $${(params.taxCents / 100).toFixed(2)}</p>`
+      : "";
+
   await resend.emails.send({
     from: process.env.EMAIL_FROM ?? "PongoLux <orders@pongolux.com>",
     to: params.to,
     subject: `Your PongoLux order #${params.orderId.slice(0, 8)} is confirmed`,
     html: `<p>Thank you for your order! We're preparing your authenticated piece for shipment.</p>
            <p>Order total: $${(params.totalCents / 100).toFixed(2)}</p>
+           ${taxLine}
            <p>Order ID: ${params.orderId}</p>`,
   });
 }

@@ -52,8 +52,8 @@ export default function ShippingReturnsPage() {
               support@pongolux.com
             </a>{" "}
             or{" "}
-            <a href="tel:+13127750792" className="text-foreground hover:text-accent">
-              (312) 775-0792
+            <a href="tel:+13127740792" className="text-foreground hover:text-accent">
+              (312) 774-0792
             </a>
             .
           </p>

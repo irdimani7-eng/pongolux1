@@ -45,6 +45,14 @@ export default async function AdminHomePage() {
             Revenue (paid + fulfilled orders)
           </div>
         </div>
+        <div className="rounded-lg border border-border bg-surface p-4">
+          <div className="text-2xl font-(family-name:--font-display)">
+            {formatPrice(stats.orders.taxCollectedCents)}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Tax collected — set aside for filing, not revenue
+          </div>
+        </div>
       </div>
 
       <div className="mt-10 flex gap-3">

@@ -15,6 +15,13 @@
       "when": 1788741504471,
       "tag": "0001_stiff_maggott",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1788744631160,
+      "tag": "0002_conscious_patriot",
+      "breakpoints": true
     }
   ]
 }

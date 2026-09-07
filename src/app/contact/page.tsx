@@ -27,8 +27,8 @@ export default function ContactPage() {
           <div>
             <h2 className="font-medium">Call</h2>
             <p className="mt-2 text-muted-foreground">
-              <a href="tel:+13127750792" className="hover:text-accent">
-                (312) 775-0792
+              <a href="tel:+13127740792" className="hover:text-accent">
+                (312) 774-0792
               </a>
             </p>
           </div>
