@@ -1,0 +1,53 @@
+import { notFound } from "next/navigation";
+import { getProductForAdmin } from "@/lib/admin-data";
+import { updateProductAction } from "@/lib/actions/admin-products";
+import { ProductForm } from "@/components/admin/product-form";
+
+export default async function EditProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const product = await getProductForAdmin(id);
+  if (!product) notFound();
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <h1 className="font-(family-name:--font-display) text-3xl">
+        Edit listing
+      </h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {product.brand} {product.title}
+      </p>
+
+      <ProductForm
+        mode="edit"
+        productId={product.id}
+        action={updateProductAction.bind(null, product.id)}
+        initialValues={{
+          sku: product.sku,
+          brand: product.brand,
+          model: product.model,
+          title: product.title,
+          description: product.description,
+          color: product.color,
+          category: product.category,
+          condition: product.condition,
+          priceUsd: (product.priceCents / 100).toFixed(2),
+          isConsignment: product.isConsignment,
+          status: product.status,
+          authMethod: product.authentication?.method ?? "entrupy",
+          authenticatedBy:
+            product.authentication?.authenticatedBy ??
+            "PongoLux Authentication Team",
+        }}
+        existingImages={product.images.map((img) => ({
+          id: img.id,
+          url: img.url,
+          alt: img.alt,
+        }))}
+      />
+    </div>
+  );
+}

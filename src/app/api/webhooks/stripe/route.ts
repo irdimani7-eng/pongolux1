@@ -1,6 +1,6 @@
 import { getStripe } from "@/lib/stripe";
 import { db } from "@/db";
-import { orders, orderItems, products } from "@/db/schema";
+import { orders, orderItems, products, addresses } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import type Stripe from "stripe";
@@ -33,6 +33,29 @@ export async function POST(req: Request) {
       return new Response("ok", { status: 200 });
     }
 
+    // Stripe collects the shipping address during Checkout
+    // (shipping_address_collection); persist it so /admin/orders can show a
+    // packing label without anyone needing to look it up in the Stripe
+    // Dashboard separately.
+    let shippingAddressId: string | undefined;
+    const shipping = session.collected_information?.shipping_details;
+    if (shipping?.address) {
+      const [address] = await db
+        .insert(addresses)
+        .values({
+          fullName: shipping.name ?? session.customer_details?.name ?? "",
+          line1: shipping.address.line1 ?? "",
+          line2: shipping.address.line2 ?? null,
+          city: shipping.address.city ?? "",
+          state: shipping.address.state ?? "",
+          postalCode: shipping.address.postal_code ?? "",
+          country: shipping.address.country ?? "US",
+          phone: session.customer_details?.phone ?? null,
+        })
+        .returning({ id: addresses.id });
+      shippingAddressId = address?.id;
+    }
+
     await db
       .update(orders)
       .set({
@@ -42,6 +65,7 @@ export async function POST(req: Request) {
             ? session.payment_intent
             : session.payment_intent?.id,
         email: session.customer_details?.email ?? order.email,
+        ...(shippingAddressId ? { shippingAddressId } : {}),
       })
       .where(eq(orders.id, orderId));
 

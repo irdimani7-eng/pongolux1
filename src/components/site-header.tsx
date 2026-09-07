@@ -34,6 +34,14 @@ export async function SiteHeader() {
         <div className="flex items-center gap-2">
           {session?.user ? (
             <div className="flex items-center gap-1">
+              {session.user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="px-3 py-2 text-sm hover:text-accent transition-colors"
+                >
+                  Admin
+                </Link>
+              )}
               <Link
                 href="/account"
                 className="px-3 py-2 text-sm hover:text-accent transition-colors"

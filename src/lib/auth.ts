@@ -62,9 +62,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
+    async jwt({ token, user }) {
+      // `user` is only present right after sign-in; look the role up fresh
+      // then so a later `role` change (e.g. promoting an admin via SQL)
+      // takes effect the next time that person signs in, not instantly on
+      // every request.
+      if (user?.id) {
+        const [row] = await db
+          .select({ role: users.role })
+          .from(users)
+          .where(eq(users.id, user.id))
+          .limit(1);
+        token.role = row?.role ?? "customer";
+      }
+      return token;
+    },
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
+        session.user.role = token.role ?? "customer";
       }
       return session;
     },

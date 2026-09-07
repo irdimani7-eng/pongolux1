@@ -60,6 +60,11 @@ each one:
   confirmation emails are skipped (logged to console) if this is unset.
 - `NEXT_PUBLIC_SITE_URL` — your deployed URL; used to build Stripe redirect
   links and (later) email links.
+- `BLOB_READ_WRITE_TOKEN` — powers photo uploads in `/admin`. On Vercel, go
+  to your project → **Storage** → **Create Database** → **Blob**, connect it
+  to this project, and Vercel adds this env var automatically (redeploy
+  after connecting it). Not needed to run the site locally unless you want
+  to test the admin photo upload flow from your machine too.
 
 ## Why Drizzle, not Prisma
 
@@ -92,6 +97,36 @@ this in their cart" message. If a cart is abandoned, the hold simply expires
 background job required. The Stripe webhook (`/api/webhooks/stripe`) flips
 the item to `sold` once payment actually succeeds.
 
+## Admin dashboard
+
+`/admin` is a small internal dashboard for managing listings and orders
+without touching code or the database directly:
+
+- **Products** — create new listings (with photo upload), edit any field,
+  add/remove photos, and change status (available/reserved/sold/archived —
+  checkout normally sets this automatically, so only override it for
+  corrections).
+- **Orders** — see every order, its items, customer email, and shipping
+  address (captured by Stripe at checkout), and update its status
+  (pending/paid/fulfilled/cancelled/refunded) as you ship things out.
+
+Photo uploads go to **Vercel Blob storage** rather than `public/products/`,
+because Vercel's serverless functions can't write to the filesystem at
+runtime the way `scripts/import-products.ts` does when run locally — see
+`BLOB_READ_WRITE_TOKEN` above for the one-time setup.
+
+**To make an account an admin**: sign up for a normal account on the site
+(or use one you already have), then run this against your database (e.g. in
+Neon's SQL Editor) and sign in again:
+
+```sql
+UPDATE "user" SET role = 'admin' WHERE email = 'you@example.com';
+```
+
+An "Admin" link then appears in the site header for that account. Anyone
+else who visits `/admin` — signed out or signed in as a regular customer —
+is redirected away; there's no way to reach it without that database flag.
+
 ## Placeholder content — replace before launch
 
 Several things in this codebase are deliberately placeholder, pending real
@@ -114,14 +149,13 @@ input from you:
 
 ## What's next (from the project roadmap)
 
-Built in this pass (Phase 1 MVP): browsing/filtering, product detail with
-authenticity badge, cart with reservation logic, Stripe Checkout, order
-confirmation email + webhook, email/password accounts with order history.
+Built so far: browsing/filtering, product detail with authenticity badge,
+cart with reservation logic, Stripe Checkout, order confirmation email +
+webhook, email/password accounts with order history, and an `/admin`
+dashboard for managing listings and orders (see above).
 
 Not yet built:
 
-- Admin interface for adding/editing listings (currently only via the seed
-  script or direct DB access)
 - Search
 - Wishlist
 - SEO metadata pass, sitemap, robots.txt
