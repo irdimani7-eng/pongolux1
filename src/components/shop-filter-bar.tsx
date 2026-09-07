@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import { Search } from "lucide-react";
 import { CATEGORY_LABELS, CONDITION_LABELS, PRICE_RANGES } from "@/lib/format";
 import type { FilterOptions, ShopFilters } from "@/lib/types";
 
@@ -32,6 +34,10 @@ export function ShopFilterBar({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
+      <SearchInput
+        value={current.search ?? ""}
+        onChange={(v) => setFilter("search", v)}
+      />
       <FilterSelect
         label="Brand"
         value={current.brand ?? ""}
@@ -100,6 +106,51 @@ function FilterSelect({
           </option>
         ))}
       </select>
+    </label>
+  );
+}
+
+/** Free-text search — debounced so it doesn't push a new URL (and re-run
+ * the product query) on every keystroke, only ~350ms after typing stops. */
+function SearchInput({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const [draft, setDraft] = useState(value);
+  // Tracks the last external `value` we've synced from, so a change made
+  // elsewhere (e.g. "Clear filters" navigating away) is picked up — done
+  // during render rather than in an effect, per React's guidance for
+  // adjusting state from a prop change without an extra render/effect.
+  const [syncedValue, setSyncedValue] = useState(value);
+  if (value !== syncedValue) {
+    setSyncedValue(value);
+    setDraft(value);
+  }
+
+  useEffect(() => {
+    if (draft === value) return;
+    const timeout = setTimeout(() => onChange(draft), 350);
+    return () => clearTimeout(timeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft]);
+
+  return (
+    <label className="relative">
+      <span className="sr-only">Search</span>
+      <Search
+        className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+        strokeWidth={1.5}
+      />
+      <input
+        type="search"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder="Search brand or model…"
+        className="rounded-full border border-border bg-surface py-1.5 pl-9 pr-4 text-sm"
+      />
     </label>
   );
 }

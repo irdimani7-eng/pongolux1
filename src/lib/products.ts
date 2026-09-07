@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { products, productImages, authenticationRecords } from "@/db/schema";
-import { and, asc, desc, eq, gt, gte, lt, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, lt, ne, notInArray, or, ilike, sql } from "drizzle-orm";
 import { PRICE_RANGES } from "@/lib/format";
 import type {
   ProductDetail,
@@ -64,6 +64,13 @@ export async function listProducts(
       : undefined,
     priceRange ? gte(products.priceCents, priceRange.min) : undefined,
     priceRange?.max != null ? lt(products.priceCents, priceRange.max) : undefined,
+    filters?.search
+      ? or(
+          ilike(products.brand, `%${filters.search}%`),
+          ilike(products.model, `%${filters.search}%`),
+          ilike(products.title, `%${filters.search}%`)
+        )
+      : undefined,
   ].filter((c): c is NonNullable<typeof c> => Boolean(c));
 
   const rows = await db
@@ -108,6 +115,64 @@ export async function getFilterOptions(): Promise<FilterOptions> {
     brands: [...new Set(rows.map((r) => r.brand))].sort(),
     colors: [...new Set(rows.map((r) => r.color))].sort(),
   };
+}
+
+/** "You may also like" — same brand first (most relevant to someone
+ * already looking at that brand), topped up with same-category items if
+ * the brand alone doesn't have enough. Excludes the current item and
+ * anything sold/archived (no point suggesting something unbuyable). */
+export async function getRelatedProducts(
+  product: { id: string; brand: string; category: string },
+  limit = 4
+): Promise<ProductListItem[]> {
+  const baseConditions = [
+    ne(products.status, "archived"),
+    ne(products.status, "sold"),
+    ne(products.id, product.id),
+  ];
+
+  const sameBrand = await db
+    .select()
+    .from(products)
+    .where(and(...baseConditions, eq(products.brand, product.brand)))
+    .orderBy(desc(products.createdAt))
+    .limit(limit);
+
+  let rows = sameBrand;
+  if (rows.length < limit) {
+    const excludeIds = [product.id, ...rows.map((r) => r.id)];
+    const sameCategory = await db
+      .select()
+      .from(products)
+      .where(
+        and(
+          ...baseConditions,
+          eq(products.category, product.category as never),
+          notInArray(products.id, excludeIds)
+        )
+      )
+      .orderBy(desc(products.createdAt))
+      .limit(limit - rows.length);
+    rows = [...rows, ...sameCategory];
+  }
+
+  return Promise.all(
+    rows.map(async (p) => ({
+      id: p.id,
+      sku: p.sku,
+      brand: p.brand,
+      model: p.model,
+      title: p.title,
+      color: p.color,
+      category: p.category,
+      condition: p.condition,
+      priceCents: p.priceCents,
+      compareAtPriceCents: p.compareAtPriceCents,
+      currency: p.currency,
+      status: p.status,
+      imageUrl: await primaryImageUrl(p.id),
+    }))
+  );
 }
 
 export async function getProductBySku(

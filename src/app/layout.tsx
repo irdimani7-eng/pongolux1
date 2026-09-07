@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
@@ -100,6 +101,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SiteHeader />
         <main className="flex-1">{children}</main>
         <SiteFooter />
+        {/* Vercel Analytics — zero-config visitor/page-view tracking, no
+            cookie banner needed (it's cookieless/privacy-friendly by
+            default). View traffic in the Vercel dashboard's Analytics tab
+            once deployed; does nothing extra locally. */}
+        <Analytics />
       </body>
     </html>
   );

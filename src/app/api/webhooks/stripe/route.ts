@@ -81,7 +81,12 @@ export async function POST(req: Request) {
       .where(eq(orders.id, orderId));
 
     const items = await db
-      .select({ productId: orderItems.productId })
+      .select({
+        productId: orderItems.productId,
+        title: orderItems.titleSnapshot,
+        priceCents: orderItems.priceCentsSnapshot,
+        imageUrl: orderItems.imageUrlSnapshot,
+      })
       .from(orderItems)
       .where(eq(orderItems.orderId, orderId));
 
@@ -94,11 +99,33 @@ export async function POST(req: Request) {
     }
 
     if (order.email) {
+      let shippingAddress: {
+        fullName: string;
+        line1: string;
+        line2: string | null;
+        city: string;
+        state: string;
+        postalCode: string;
+        country: string;
+      } | null = null;
+      if (shippingAddressId) {
+        const [addr] = await db
+          .select()
+          .from(addresses)
+          .where(eq(addresses.id, shippingAddressId))
+          .limit(1);
+        if (addr) shippingAddress = addr;
+      }
+
       await sendOrderConfirmationEmail({
         to: order.email,
         orderId: order.id,
+        items,
+        subtotalCents: order.subtotalCents,
+        shippingCents: order.shippingCents,
         totalCents,
         taxCents,
+        shippingAddress,
       });
     }
   }

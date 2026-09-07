@@ -38,6 +38,8 @@ export type ShopFilters = {
   color?: string;
   condition?: string;
   priceRange?: string;
+  /** Free-text match against brand/model/title. */
+  search?: string;
 };
 
 export type FilterOptions = {

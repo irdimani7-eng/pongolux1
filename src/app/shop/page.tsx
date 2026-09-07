@@ -1,6 +1,7 @@
 import { ProductCard } from "@/components/product-card";
 import { ShopFilterBar } from "@/components/shop-filter-bar";
 import { HeroBanner } from "@/components/hero-banner";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { listProducts, getFilterOptions } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
 import type { ShopFilters } from "@/lib/types";
@@ -26,6 +27,7 @@ export default async function ShopPage({
     color: firstValue(params.color),
     condition: firstValue(params.condition),
     priceRange: firstValue(params.priceRange),
+    search: firstValue(params.search),
   };
 
   const [products, options] = await Promise.all([
@@ -52,6 +54,7 @@ export default async function ShopPage({
       />
 
       <div className="mx-auto max-w-6xl px-6 py-12">
+        <Breadcrumbs items={[{ label: "Home", href: "/" }, { label: "Shop" }]} />
         <ShopFilterBar options={options} current={filters} />
 
         {products.length === 0 ? (

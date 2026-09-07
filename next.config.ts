@@ -27,6 +27,30 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.public.blob.vercel-storage.com" },
     ],
   },
+  // Baseline security headers — safe, low-risk hardening that doesn't
+  // touch what the app is allowed to load (no Content-Security-Policy
+  // here, since that would need careful tuning against Stripe/Vercel
+  // Blob/Unsplash and is easy to get subtly wrong; worth a dedicated pass
+  // later rather than bundling it in here).
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          // Stops the site from being loaded in an <iframe> on another
+          // domain (clickjacking protection).
+          { key: "X-Frame-Options", value: "DENY" },
+          // Stops browsers from "sniffing" a response into a different
+          // content type than the server declared.
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          // Only sends the origin (not the full URL/path) as the Referer
+          // header on cross-site navigation — avoids leaking, e.g., a
+          // customer's order-confirmation URL to a third-party site.
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

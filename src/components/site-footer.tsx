@@ -3,10 +3,25 @@ import { Logo } from "@/components/logo";
 import { InstagramIcon } from "@/components/social-icons";
 import { MessageCircle } from "lucide-react";
 import { SOCIAL_LINKS } from "@/lib/social-links";
+import { NewsletterSignupForm } from "@/components/newsletter-signup-form";
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-border bg-muted/40">
+      <div className="border-b border-border">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="font-(family-name:--font-display) text-lg">
+              Get new arrivals first
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Since every piece is one-of-one, our list is the fastest way to
+              hear about new finds before they&apos;re gone.
+            </p>
+          </div>
+          <NewsletterSignupForm />
+        </div>
+      </div>
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 text-sm sm:grid-cols-2 md:grid-cols-4">
         <div>
           <Logo />
@@ -112,6 +127,15 @@ export function SiteFooter() {
           endorsed by, or sponsored by any of the brands offered on this
           site. All brand names, logos, and trademarks are the property of
           their respective owners.
+        </p>
+        <p className="mt-2">
+          <Link href="/privacy" className="hover:text-accent">
+            Privacy Policy
+          </Link>
+          {" · "}
+          <Link href="/terms" className="hover:text-accent">
+            Terms of Service
+          </Link>
         </p>
       </div>
     </footer>

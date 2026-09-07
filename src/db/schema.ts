@@ -237,6 +237,11 @@ export const orders = pgTable("order", {
   shippingAddressId: text("shipping_address_id").references(
     () => addresses.id
   ),
+  // Optional — set by an admin from /admin/orders/[id] when marking an
+  // order Fulfilled. Included in the "your order has shipped" email when
+  // present; the email still sends without one, just without a tracking
+  // link.
+  trackingNumber: text("tracking_number"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -298,3 +303,18 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
     references: [products.id],
   }),
 }));
+
+// ---------------------------------------------------------------------------
+// Newsletter — simple email capture, no ESP (Mailchimp/Klaviyo/Resend
+// Audiences) wired up yet. Storing signups here means nothing is lost
+// while that tool decision is still pending; exporting this list later is
+// a one-query job.
+// ---------------------------------------------------------------------------
+
+export const newsletterSubscribers = pgTable("newsletter_subscriber", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  email: text("email").notNull().unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});

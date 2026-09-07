@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
-import { getProductBySku, isOnSale } from "@/lib/products";
+import { getProductBySku, getRelatedProducts, isOnSale } from "@/lib/products";
 import { formatPrice, CONDITION_LABELS, AUTH_METHOD_LABELS } from "@/lib/format";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductGallery } from "@/components/product-gallery";
+import { ProductCard } from "@/components/product-card";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -82,6 +84,8 @@ export default async function ProductPage({
     },
   };
 
+  const related = await getRelatedProducts(product);
+
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
       <script
@@ -89,6 +93,14 @@ export default async function ProductPage({
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(productJsonLd).replace(/</g, "\\u003c"),
         }}
+      />
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Shop", href: "/shop" },
+          { label: product.brand, href: `/shop?brand=${encodeURIComponent(product.brand)}` },
+          { label: product.title },
+        ]}
       />
       <div className="grid gap-10 lg:grid-cols-2">
         <ProductGallery
@@ -176,6 +188,19 @@ export default async function ProductPage({
           </div>
         </div>
       </div>
+
+      {related.length > 0 && (
+        <div className="mt-20 border-t border-border pt-12">
+          <h2 className="mb-6 font-(family-name:--font-display) text-2xl">
+            You may also like
+          </h2>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+            {related.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
