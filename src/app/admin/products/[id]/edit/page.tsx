@@ -31,6 +31,8 @@ export default async function EditProductPage({
           model: product.model,
           title: product.title,
           description: product.description,
+          conditionNotes: product.conditionNotes ?? "",
+          dimensions: product.dimensions ?? "",
           color: product.color,
           category: product.category,
           condition: product.condition,

@@ -2,12 +2,19 @@ import Link from "next/link";
 import Image from "next/image";
 import { ProductCard } from "@/components/product-card";
 import { HeroBanner } from "@/components/hero-banner";
-import { listProducts } from "@/lib/products";
+import { listProducts, getFilterOptions } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
-import { ShieldCheck, Truck, Clock } from "lucide-react";
+import { BRAND_STORIES } from "@/lib/brand-stories";
+import { ShieldCheck, Truck, Clock, Sparkles, Leaf } from "lucide-react";
 
 export default async function HomePage() {
-  const featured = (await listProducts({ excludeSold: true })).slice(0, 4);
+  const [allAvailable, mostWanted, { brands }] = await Promise.all([
+    listProducts({ excludeSold: true }),
+    listProducts({ excludeSold: true, mostWantedOnly: true }),
+    getFilterOptions(),
+  ]);
+  const featured = allAvailable.slice(0, 8);
+  const mostWantedPreview = mostWanted.slice(0, 4);
 
   return (
     <div>
@@ -44,6 +51,25 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {brands.length > 0 && (
+        <section className="mx-auto max-w-6xl px-6 py-12">
+          <h2 className="mb-6 font-(family-name:--font-display) text-2xl">
+            Shop by brand
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            {brands.map((brand) => (
+              <Link
+                key={brand}
+                href={`/shop?brand=${encodeURIComponent(brand)}`}
+                className="rounded-full border border-border px-5 py-2 text-sm hover:border-foreground"
+              >
+                {brand}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {featured.length > 0 && (
         <section className="mx-auto max-w-6xl px-6 py-16">
           <div className="mb-6 flex items-end justify-between">
@@ -58,6 +84,31 @@ export default async function HomePage() {
             {featured.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
+          </div>
+        </section>
+      )}
+
+      {mostWantedPreview.length > 0 && (
+        <section className="border-t border-border bg-muted/40">
+          <div className="mx-auto max-w-6xl px-6 py-16">
+            <div className="mb-6 flex items-end justify-between">
+              <div>
+                <div className="text-sm uppercase tracking-wide text-muted-foreground">
+                  Fan favorites
+                </div>
+                <h2 className="mt-1 font-(family-name:--font-display) text-2xl">
+                  Most wanted
+                </h2>
+              </div>
+              <Link href="/shop/most-wanted" className="text-sm hover:text-accent">
+                View all
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+              {mostWantedPreview.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -111,6 +162,65 @@ export default async function HomePage() {
                 </p>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <div className="grid gap-8 sm:grid-cols-2">
+          <div className="rounded-lg border border-border p-8">
+            <Leaf className="size-6" strokeWidth={1.5} />
+            <h3 className="mt-4 font-(family-name:--font-display) text-xl">
+              Why buy pre-loved
+            </h3>
+            <p className="mt-3 text-sm text-muted-foreground">
+              A well-made handbag is built to outlast trends by decades — buying
+              it secondhand means the leather, hardware, and craftsmanship get
+              a second life instead of sitting unused. It&apos;s a lower-impact way
+              to own the same pieces, often for a fraction of the original
+              retail price.
+            </p>
+          </div>
+          <div className="rounded-lg border border-border p-8">
+            <Sparkles className="size-6" strokeWidth={1.5} />
+            <h3 className="mt-4 font-(family-name:--font-display) text-xl">
+              Consignment, made simple
+            </h3>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Have a designer bag you&apos;re ready to let go of? We handle the
+              authentication, photography, and listing — you get paid once it
+              sells. No upfront fees.
+            </p>
+            <Link
+              href="/contact"
+              className="mt-4 inline-block text-sm underline hover:text-accent"
+            >
+              Get in touch about consigning
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-border bg-muted/40">
+        <div className="mx-auto max-w-6xl px-6 py-16">
+          <h2 className="font-(family-name:--font-display) text-2xl">
+            The story behind the bags
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            A little of the history behind the maisons whose work passes
+            through our hands.
+          </p>
+          <div className="mt-8 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {BRAND_STORIES.map((story) => (
+              <div key={story.brand}>
+                <h3 className="font-(family-name:--font-display) text-lg">
+                  {story.brand}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {story.blurb}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

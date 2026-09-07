@@ -65,6 +65,16 @@ export const ProductFormSchema = z.object({
   model: z.string().trim().min(1, "Model is required."),
   title: z.string().trim().min(1, "Title is required."),
   description: z.string().trim().min(1, "Description is required."),
+  // Both optional: shown as their own labeled sections on the product page
+  // only when filled in.
+  conditionNotes: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  dimensions: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
   color: z.string().trim().min(1, "Color is required."),
   category: z.enum(PRODUCT_CATEGORIES),
   condition: z.enum(PRODUCT_CONDITIONS),

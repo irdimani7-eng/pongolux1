@@ -105,6 +105,13 @@ export const products = pgTable(
     model: text("model").notNull(),
     title: text("title").notNull(),
     description: text("description").notNull().default(""),
+    // Optional, separate from `description` — shown as their own labeled
+    // sections on the product page (Condition / Size) instead of being
+    // folded into one paragraph. Null/blank means that section is simply
+    // omitted from the page, so older listings without this data still
+    // render fine.
+    conditionNotes: text("condition_notes"),
+    dimensions: text("dimensions"),
     color: text("color").notNull(),
     category: text("category", {
       enum: ["handbag", "wallet", "accessory", "other"],

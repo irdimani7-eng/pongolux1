@@ -17,6 +17,12 @@ export type ProductListItem = {
 
 export type ProductDetail = ProductListItem & {
   description: string;
+  /** Optional — shown as its own "Condition" section on the product page
+   * when present, alongside the overall condition grade. */
+  conditionNotes: string | null;
+  /** Optional — shown as its own "Size" section on the product page when
+   * present, e.g. "W 23.5 cm x H 17 cm x D 11.5 cm". */
+  dimensions: string | null;
   isConsignment: boolean;
   images: { url: string; alt: string }[];
   authentication: {

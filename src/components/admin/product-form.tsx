@@ -31,6 +31,8 @@ type ProductFormProps = {
     model: string;
     title: string;
     description: string;
+    conditionNotes: string;
+    dimensions: string;
     color: string;
     category: string;
     condition: string;
@@ -143,6 +145,32 @@ export function ProductForm({
             required
             rows={4}
             defaultValue={initialValues?.description}
+            className={inputClass}
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="conditionNotes" className={labelClass}>
+            Condition notes <span className="text-muted-foreground">(optional)</span>
+          </label>
+          <textarea
+            id="conditionNotes"
+            name="conditionNotes"
+            rows={3}
+            placeholder="e.g. Light corner wear; scratches on hardware. Shown as its own “Condition” section on the product page — leave blank to omit it."
+            defaultValue={initialValues?.conditionNotes}
+            className={inputClass}
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label htmlFor="dimensions" className={labelClass}>
+            Size / dimensions <span className="text-muted-foreground">(optional)</span>
+          </label>
+          <textarea
+            id="dimensions"
+            name="dimensions"
+            rows={2}
+            placeholder='e.g. W 23.5 cm x H 17 cm x D 11.5 cm, 26" shoulder drop'
+            defaultValue={initialValues?.dimensions}
             className={inputClass}
           />
         </div>

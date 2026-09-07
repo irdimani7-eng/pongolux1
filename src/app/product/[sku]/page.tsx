@@ -88,8 +88,29 @@ export default async function ProductPage({
             </div>
           )}
 
-          <div className="mt-8 whitespace-pre-line text-sm text-muted-foreground">
-            {product.description}
+          <div className="mt-8 space-y-6 text-sm">
+            <div>
+              <h2 className="text-sm font-medium">Description</h2>
+              <p className="mt-2 whitespace-pre-line text-muted-foreground">
+                {product.description}
+              </p>
+            </div>
+            {product.conditionNotes && (
+              <div>
+                <h2 className="text-sm font-medium">Condition</h2>
+                <p className="mt-2 whitespace-pre-line text-muted-foreground">
+                  {product.conditionNotes}
+                </p>
+              </div>
+            )}
+            {product.dimensions && (
+              <div>
+                <h2 className="text-sm font-medium">Size</h2>
+                <p className="mt-2 whitespace-pre-line text-muted-foreground">
+                  {product.dimensions}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
