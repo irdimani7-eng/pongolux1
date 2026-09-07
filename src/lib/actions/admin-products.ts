@@ -56,7 +56,19 @@ async function uploadImages(sku: string, formData: FormData) {
     const blob = await put(
       `products/${sku}/${crypto.randomUUID()}-${safeName}`,
       file,
-      { access: "public" }
+      {
+        access: "public",
+        // Vercel's Blob "Manage Blob Connection" flow locks its generated
+        // env var names to whatever prefix was chosen at connect time, so
+        // the new public store's token isn't the conventional
+        // BLOB_READ_WRITE_TOKEN the SDK looks for by default — it's this
+        // prefixed one instead. Passing it explicitly avoids needing to
+        // rename/disconnect anything in the Vercel dashboard (those
+        // connection-managed variables can't be renamed or deleted from
+        // the Environment Variables page anyway — only via "Manage Blob
+        // Connection" / disconnecting the store).
+        token: process.env.PONGOLUX_BLOB_PUBLIC_FINAL_READ_WRITE_TOKEN,
+      }
     );
     urls.push(blob.url);
   }
@@ -303,7 +315,12 @@ export async function deleteProductImageAction(
   await db.delete(productImages).where(eq(productImages.id, imageId));
   if (image?.url) {
     try {
-      await del(image.url);
+      // Same reasoning as uploadImages() above — explicit token for the
+      // connection-managed public Blob store, since it isn't named
+      // BLOB_READ_WRITE_TOKEN.
+      await del(image.url, {
+        token: process.env.PONGOLUX_BLOB_PUBLIC_FINAL_READ_WRITE_TOKEN,
+      });
     } catch (err) {
       // Not fatal — the DB row is already gone, which is what actually
       // controls whether it shows on the site. A stray blob can be cleaned
