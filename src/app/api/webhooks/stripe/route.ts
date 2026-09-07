@@ -117,16 +117,23 @@ export async function POST(req: Request) {
         if (addr) shippingAddress = addr;
       }
 
-      await sendOrderConfirmationEmail({
-        to: order.email,
-        orderId: order.id,
-        items,
-        subtotalCents: order.subtotalCents,
-        shippingCents: order.shippingCents,
-        totalCents,
-        taxCents,
-        shippingAddress,
-      });
+      // The order/product DB updates above already succeeded — don't let
+      // a Resend failure turn into a 500 here, which would make Stripe
+      // retry a webhook that already did its actual job.
+      try {
+        await sendOrderConfirmationEmail({
+          to: order.email,
+          orderId: order.id,
+          items,
+          subtotalCents: order.subtotalCents,
+          shippingCents: order.shippingCents,
+          totalCents,
+          taxCents,
+          shippingAddress,
+        });
+      } catch (err) {
+        console.error("Failed to send order confirmation email for order", order.id, err);
+      }
     }
   }
 

@@ -35,11 +35,18 @@ export async function updateOrderStatusAction(
   // on every save — so re-saving an already-fulfilled order (e.g. just to
   // add a tracking number after the fact) doesn't re-notify the customer.
   if (existing && existing.status !== "fulfilled" && status === "fulfilled") {
-    await sendOrderShippedEmail({
-      to: existing.email,
-      orderId,
-      trackingNumber: trackingNumber || null,
-    });
+    // The order status change above already succeeded — don't let a
+    // Resend failure (bad key, rejected send, etc.) make this action
+    // look like it failed when the actual status update went through.
+    try {
+      await sendOrderShippedEmail({
+        to: existing.email,
+        orderId,
+        trackingNumber: trackingNumber || null,
+      });
+    } catch (err) {
+      console.error("Failed to send order shipped email for order", orderId, err);
+    }
   }
 
   revalidatePath("/admin/orders");

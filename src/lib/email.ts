@@ -59,7 +59,7 @@ export async function sendContactFormEmail(params: {
     return;
   }
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
     to: "support@pongolux.com",
     replyTo: params.email,
@@ -69,6 +69,16 @@ export async function sendContactFormEmail(params: {
            <p><strong>Message:</strong></p>
            <p>${params.message.replace(/\n/g, "<br />")}</p>`,
   });
+
+  // The Resend SDK does NOT throw on a rejected send — it returns
+  // { data, error } either way. Without this check, a rejected email
+  // (bad key permissions, unverified domain, etc.) would silently look
+  // like a success to both the caller and anyone reading the logs.
+  if (error) {
+    console.error("Resend rejected contact form email:", error);
+    throw new Error(`Resend error (${error.name}): ${error.message}`);
+  }
+  console.log("Contact form email sent, Resend id:", data?.id);
 }
 
 export async function sendOrderConfirmationEmail(params: {
@@ -144,12 +154,18 @@ export async function sendOrderConfirmationEmail(params: {
     ${addressHtml}
   `;
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
     to: params.to,
     subject: `Your PongoLux order #${params.orderId.slice(0, 8)} is confirmed`,
     html: emailShell(body),
   });
+
+  if (error) {
+    console.error("Resend rejected order confirmation email:", error);
+    throw new Error(`Resend error (${error.name}): ${error.message}`);
+  }
+  console.log("Order confirmation email sent, Resend id:", data?.id);
 }
 
 export async function sendOrderShippedEmail(params: {
@@ -179,10 +195,16 @@ export async function sendOrderShippedEmail(params: {
     ${trackingHtml}
   `;
 
-  await resend.emails.send({
+  const { data, error } = await resend.emails.send({
     from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
     to: params.to,
     subject: `Your PongoLux order #${params.orderId.slice(0, 8)} has shipped`,
     html: emailShell(body),
   });
+
+  if (error) {
+    console.error("Resend rejected order shipped email:", error);
+    throw new Error(`Resend error (${error.name}): ${error.message}`);
+  }
+  console.log("Order shipped email sent, Resend id:", data?.id);
 }
