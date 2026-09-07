@@ -4,6 +4,13 @@ import { HeroBanner } from "@/components/hero-banner";
 import { listProducts, getFilterOptions } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
 import type { ShopFilters } from "@/lib/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Shop All Handbags",
+  description:
+    "Browse authenticated, pre-owned designer handbags from Chanel, Louis Vuitton, Gucci, Hermès, and more — filter by brand, type, color, condition, and price.",
+};
 
 function firstValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;

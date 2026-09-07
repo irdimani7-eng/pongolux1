@@ -12,10 +12,41 @@ export async function generateMetadata({
   const { sku } = await params;
   const product = await getProductBySku(sku);
   if (!product) return {};
+  const title = `${product.brand} ${product.title}`;
+  const description = product.description.slice(0, 155);
+  const image = product.images[0]?.url;
   return {
-    title: `${product.brand} ${product.title}`,
-    description: product.description.slice(0, 155),
+    title,
+    description,
+    alternates: { canonical: `/product/${product.sku}` },
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
   };
+}
+
+/** Maps our internal one-of-one status to schema.org's ItemAvailability
+ * vocabulary for the Product JSON-LD below. "reserved" (a 15-minute cart
+ * hold) is treated as LimitedAvailability rather than InStock, since it
+ * genuinely can't be bought by someone else right now. */
+function schemaAvailability(status: string) {
+  switch (status) {
+    case "available":
+      return "https://schema.org/InStock";
+    case "reserved":
+      return "https://schema.org/LimitedAvailability";
+    default:
+      return "https://schema.org/OutOfStock";
+  }
 }
 
 export default async function ProductPage({
@@ -25,9 +56,40 @@ export default async function ProductPage({
   const product = await getProductBySku(sku);
   if (!product) notFound();
   const onSale = product.status !== "sold" && isOnSale(product);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  // Bulk-imported photos are stored as relative /products/<sku>/N.webp
+  // paths (served from /public); admin-uploaded ones are already full
+  // Vercel Blob URLs. JSON-LD (and Open Graph) images should be absolute
+  // either way.
+  const absoluteImageUrl = (url: string) =>
+    url.startsWith("http") ? url : `${siteUrl}${url}`;
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: `${product.brand} ${product.title}`,
+    description: product.description,
+    sku: product.sku,
+    brand: { "@type": "Brand", name: product.brand },
+    image: product.images.map((img) => absoluteImageUrl(img.url)),
+    offers: {
+      "@type": "Offer",
+      url: `${siteUrl}/product/${product.sku}`,
+      priceCurrency: product.currency,
+      price: (product.priceCents / 100).toFixed(2),
+      availability: schemaAvailability(product.status),
+      itemCondition: "https://schema.org/UsedCondition",
+    },
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <div className="grid gap-10 lg:grid-cols-2">
         <ProductGallery
           images={product.images}

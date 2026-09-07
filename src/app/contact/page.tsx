@@ -1,6 +1,10 @@
 import { ContactForm } from "@/components/contact-form";
 
-export const metadata = { title: "Contact Us" };
+export const metadata = {
+  title: "Contact Us",
+  description:
+    "Questions about an order, a piece you're eyeing, or a bag you'd like to consign? Get in touch with the PongoLux team.",
+};
 
 export default function ContactPage() {
   return (
@@ -47,10 +51,10 @@ export default function ContactPage() {
             <h2 className="font-medium">Marketing &amp; PR</h2>
             <p className="mt-2 text-muted-foreground">
               <a
-                href="mailto:press@pongolux.com"
+                href="mailto:support@pongolux.com"
                 className="hover:text-accent"
               >
-                press@pongolux.com
+                support@pongolux.com
               </a>
             </p>
           </div>

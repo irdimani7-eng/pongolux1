@@ -1,7 +1,11 @@
 import Image from "next/image";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
 
-export const metadata = { title: "About" };
+export const metadata = {
+  title: "About Us",
+  description:
+    "PongoLux is a US-based reseller of 100% authenticated designer handbags — every piece is Entrupy-scanned and hand-verified by our in-house team before it's listed.",
+};
 
 export default function AboutPage() {
   return (

@@ -1,6 +1,10 @@
 import { formatPrice, SHIPPING_INSURANCE_CENTS } from "@/lib/format";
 
-export const metadata = { title: "Shipping & Returns" };
+export const metadata = {
+  title: "Shipping & Returns",
+  description:
+    "Free shipping on every order, delivered within 3 business days. Learn about PongoLux's return window and re-authentication policy.",
+};
 
 export default function ShippingReturnsPage() {
   return (

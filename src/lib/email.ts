@@ -20,7 +20,10 @@ export async function sendContactFormEmail(params: {
   }
 
   await resend.emails.send({
-    from: process.env.EMAIL_FROM ?? "PongoLux <orders@pongolux.com>",
+    // info@ and support@ are PongoLux's only real inboxes — no dedicated
+    // orders@ mailbox exists, so transactional email sends from info@ by
+    // default. Override with EMAIL_FROM if that changes.
+    from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
     to: "support@pongolux.com",
     replyTo: params.email,
     subject: `[Contact — ${params.attention}] ${params.firstName} ${params.lastName}`,
@@ -51,7 +54,10 @@ export async function sendOrderConfirmationEmail(params: {
       : "";
 
   await resend.emails.send({
-    from: process.env.EMAIL_FROM ?? "PongoLux <orders@pongolux.com>",
+    // info@ and support@ are PongoLux's only real inboxes — no dedicated
+    // orders@ mailbox exists, so transactional email sends from info@ by
+    // default. Override with EMAIL_FROM if that changes.
+    from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
     to: params.to,
     subject: `Your PongoLux order #${params.orderId.slice(0, 8)} is confirmed`,
     html: `<p>Thank you for your order! We're preparing your authenticated piece for shipment.</p>

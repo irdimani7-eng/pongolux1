@@ -4,7 +4,11 @@ import { HeroBanner } from "@/components/hero-banner";
 import { listProducts } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
 
-export const metadata = { title: "New Price Drops" };
+export const metadata = {
+  title: "New Price Drops",
+  description:
+    "Authenticated designer handbags with a new, lower price — shop markdowns on Chanel, Louis Vuitton, Gucci, and more at PongoLux.",
+};
 
 export default async function PriceDropsPage() {
   const products = await listProducts({ onSaleOnly: true });

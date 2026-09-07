@@ -4,7 +4,11 @@ import { HeroBanner } from "@/components/hero-banner";
 import { listProducts } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
 
-export const metadata = { title: "Most Wanted" };
+export const metadata = {
+  title: "Most Wanted",
+  description:
+    "Our most sought-after authenticated designer handbags, hand-picked by the PongoLux team.",
+};
 
 export default async function MostWantedPage() {
   const products = await listProducts({ mostWantedOnly: true });
