@@ -60,7 +60,9 @@ export default async function AccountPage() {
         </ul>
       )}
 
-      <h2 className="mt-10 text-lg font-medium">Saved items</h2>
+      <h2 id="saved-items" className="mt-10 scroll-mt-24 text-lg font-medium">
+        Saved items
+      </h2>
       {savedItems.length === 0 ? (
         <p className="mt-2 text-sm text-muted-foreground">
           Nothing saved yet — tap the heart on any listing to keep it here.

@@ -14,6 +14,7 @@ type WishlistContextValue = {
   isSaved: (productId: string) => boolean;
   toggle: (productId: string) => void;
   pending: boolean;
+  count: number;
 };
 
 const WishlistContext = createContext<WishlistContextValue | null>(null);
@@ -57,17 +58,30 @@ export function WishlistProvider({
     flip(productId); // optimistic
 
     startTransition(async () => {
-      const result = await toggleWishlistAction(productId);
-      if (!result.ok) {
-        flip(productId); // revert — toggling again cancels the optimistic flip either way
-        if (result.message === "sign_in_required") router.push("/login");
+      try {
+        const result = await toggleWishlistAction(productId);
+        if (!result.ok) {
+          flip(productId); // revert — toggling again cancels the optimistic flip either way
+          if (result.message === "sign_in_required") router.push("/login");
+        }
+      } catch (err) {
+        // The server action itself threw (e.g. a DB error) rather than
+        // returning { ok: false } — still revert the optimistic flip so a
+        // failed save doesn't look like it silently succeeded.
+        console.error("Wishlist toggle failed:", err);
+        flip(productId);
       }
     });
   };
 
   return (
     <WishlistContext.Provider
-      value={{ isSaved: (id) => ids.has(id), toggle, pending: isPending }}
+      value={{
+        isSaved: (id) => ids.has(id),
+        toggle,
+        pending: isPending,
+        count: ids.size,
+      }}
     >
       {children}
     </WishlistContext.Provider>

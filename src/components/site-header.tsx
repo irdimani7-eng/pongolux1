@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { auth, signOut } from "@/lib/auth";
 import { CartBadge } from "@/components/cart-badge";
+import { WishlistBadge } from "@/components/wishlist-badge";
 import { Logo } from "@/components/logo";
 
 export async function SiteHeader() {
@@ -67,6 +68,7 @@ export async function SiteHeader() {
                   Sign out
                 </button>
               </form>
+              <WishlistBadge />
             </div>
           ) : (
             <Link

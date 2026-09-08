@@ -22,21 +22,30 @@ export async function toggleWishlistAction(
     return { ok: false, message: "sign_in_required" };
   }
 
-  const [existing] = await db
-    .select({ id: wishlistItems.id })
-    .from(wishlistItems)
-    .where(
-      and(eq(wishlistItems.userId, userId), eq(wishlistItems.productId, productId))
-    )
-    .limit(1);
+  try {
+    const [existing] = await db
+      .select({ id: wishlistItems.id })
+      .from(wishlistItems)
+      .where(
+        and(eq(wishlistItems.userId, userId), eq(wishlistItems.productId, productId))
+      )
+      .limit(1);
 
-  if (existing) {
-    await db.delete(wishlistItems).where(eq(wishlistItems.id, existing.id));
+    if (existing) {
+      await db.delete(wishlistItems).where(eq(wishlistItems.id, existing.id));
+      revalidatePath("/account");
+      return { ok: true, added: false };
+    }
+
+    await db.insert(wishlistItems).values({ userId, productId });
     revalidatePath("/account");
-    return { ok: true, added: false };
+    return { ok: true, added: true };
+  } catch (err) {
+    // Most likely cause: migration-007-wishlist.sql hasn't been run
+    // against this database yet, so `wishlist_item` doesn't exist. Report
+    // a clean failure instead of throwing, so the client can revert its
+    // optimistic heart-flip instead of looking like it silently worked.
+    console.error("toggleWishlistAction failed for product", productId, err);
+    return { ok: false, message: "error" };
   }
-
-  await db.insert(wishlistItems).values({ userId, productId });
-  revalidatePath("/account");
-  return { ok: true, added: true };
 }
