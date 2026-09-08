@@ -42,20 +42,6 @@
     sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-display: Georgia, Cambria, "Times New Roman", Times, serif;
-
-  /* Powers the "Shop by brand" auto-scrolling strip (BrandMarquee) — the
-     track is rendered as two identical copies of the brand list, so
-     translating exactly -50% makes the loop seamless. */
-  --animate-marquee: marquee 34s linear infinite;
-}
-
-@keyframes marquee {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
 }
 
 @media (prefers-color-scheme: dark) {

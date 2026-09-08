@@ -2,18 +2,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { ProductCard } from "@/components/product-card";
 import { HeroBanner } from "@/components/hero-banner";
-import { listProducts, getFilterOptions } from "@/lib/products";
+import { listProducts } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
 import { BRAND_STORIES } from "@/lib/brand-stories";
 import { Sparkles, Leaf } from "lucide-react";
 import { TrustBar } from "@/components/trust-bar";
-import { BrandMarquee } from "@/components/brand-marquee";
+import { FeaturedBrands } from "@/components/featured-brands";
 
 export default async function HomePage() {
-  const [allAvailable, mostWanted, { brands }] = await Promise.all([
+  const [allAvailable, mostWanted] = await Promise.all([
     listProducts({ excludeSold: true }),
     listProducts({ excludeSold: true, mostWantedOnly: true }),
-    getFilterOptions(),
   ]);
   const featured = allAvailable.slice(0, 8);
   const mostWantedPreview = mostWanted.slice(0, 4);
@@ -38,16 +37,14 @@ export default async function HomePage() {
 
       <TrustBar />
 
-      {brands.length > 0 && (
-        <section className="border-y border-border bg-muted/30 py-14">
-          <div className="mx-auto max-w-6xl px-6">
-            <h2 className="mb-8 font-(family-name:--font-display) text-2xl">
-              Shop by brand
-            </h2>
-            <BrandMarquee brands={brands} />
-          </div>
-        </section>
-      )}
+      <section className="border-y border-border bg-muted/30 py-14">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="mb-8 text-center font-(family-name:--font-display) text-2xl">
+            Shop by brand
+          </h2>
+          <FeaturedBrands />
+        </div>
+      </section>
 
       {featured.length > 0 && (
         <section className="mx-auto max-w-6xl px-6 py-16">
