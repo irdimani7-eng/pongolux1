@@ -15,25 +15,26 @@ export function BrandMarquee({ brands }: { brands: string[] }) {
       href={`/shop?brand=${encodeURIComponent(brand)}`}
       aria-hidden={duplicate || undefined}
       tabIndex={duplicate ? -1 : undefined}
-      className="flex h-24 w-44 shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-surface px-4 text-center shadow-sm transition hover:-translate-y-0.5 hover:border-accent hover:shadow-md"
+      className="flex h-28 w-48 shrink-0 flex-col items-center justify-center gap-2.5 rounded-2xl border border-border bg-surface px-4 text-center shadow-sm transition duration-200 hover:-translate-y-1 hover:border-accent hover:shadow-lg"
     >
-      <span className="font-(family-name:--font-display) text-base">
+      <span className="font-(family-name:--font-display) text-lg">
         {brand}
       </span>
+      <span className="h-px w-8 bg-accent/50" />
     </Link>
   );
 
   return (
     <div
-      className="group relative overflow-hidden py-1"
+      className="group relative overflow-hidden py-2"
       style={{
         maskImage:
-          "linear-gradient(to right, transparent, black 48px, black calc(100% - 48px), transparent)",
+          "linear-gradient(to right, transparent, black 32px, black calc(100% - 32px), transparent)",
         WebkitMaskImage:
-          "linear-gradient(to right, transparent, black 48px, black calc(100% - 48px), transparent)",
+          "linear-gradient(to right, transparent, black 32px, black calc(100% - 32px), transparent)",
       }}
     >
-      <div className="flex w-max gap-4 motion-safe:animate-marquee motion-safe:group-hover:[animation-play-state:paused] motion-safe:group-focus-within:[animation-play-state:paused]">
+      <div className="flex w-max gap-5 motion-safe:animate-marquee motion-safe:group-hover:[animation-play-state:paused] motion-safe:group-focus-within:[animation-play-state:paused]">
         {brands.map((brand) => card(brand, `a-${brand}`))}
         {brands.map((brand) => card(brand, `b-${brand}`, true))}
       </div>

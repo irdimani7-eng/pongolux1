@@ -39,13 +39,13 @@ export default async function HomePage() {
       <TrustBar />
 
       {brands.length > 0 && (
-        <section className="py-12">
+        <section className="border-y border-border bg-muted/30 py-14">
           <div className="mx-auto max-w-6xl px-6">
-            <h2 className="mb-6 font-(family-name:--font-display) text-2xl">
+            <h2 className="mb-8 font-(family-name:--font-display) text-2xl">
               Shop by brand
             </h2>
+            <BrandMarquee brands={brands} />
           </div>
-          <BrandMarquee brands={brands} />
         </section>
       )}
 
