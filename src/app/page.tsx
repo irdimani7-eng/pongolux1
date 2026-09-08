@@ -7,6 +7,7 @@ import { MARKETING_IMAGES } from "@/lib/marketing-images";
 import { BRAND_STORIES } from "@/lib/brand-stories";
 import { Sparkles, Leaf } from "lucide-react";
 import { TrustBar } from "@/components/trust-bar";
+import { BrandMarquee } from "@/components/brand-marquee";
 
 export default async function HomePage() {
   const [allAvailable, mostWanted, { brands }] = await Promise.all([
@@ -38,21 +39,13 @@ export default async function HomePage() {
       <TrustBar />
 
       {brands.length > 0 && (
-        <section className="mx-auto max-w-6xl px-6 py-12">
-          <h2 className="mb-6 font-(family-name:--font-display) text-2xl">
-            Shop by brand
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            {brands.map((brand) => (
-              <Link
-                key={brand}
-                href={`/shop?brand=${encodeURIComponent(brand)}`}
-                className="rounded-full border border-border px-5 py-2 text-sm hover:border-foreground"
-              >
-                {brand}
-              </Link>
-            ))}
+        <section className="py-12">
+          <div className="mx-auto max-w-6xl px-6">
+            <h2 className="mb-6 font-(family-name:--font-display) text-2xl">
+              Shop by brand
+            </h2>
           </div>
+          <BrandMarquee brands={brands} />
         </section>
       )}
 
