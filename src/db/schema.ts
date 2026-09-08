@@ -270,6 +270,7 @@ export const orderItems = pgTable("order_item", {
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
   addresses: many(addresses),
+  wishlistItems: many(wishlistItems),
 }));
 
 export const productsRelations = relations(products, ({ many, one }) => ({
@@ -278,6 +279,7 @@ export const productsRelations = relations(products, ({ many, one }) => ({
     fields: [products.id],
     references: [authenticationRecords.productId],
   }),
+  wishlistItems: many(wishlistItems),
 }));
 
 export const productImagesRelations = relations(productImages, ({ one }) => ({
@@ -318,3 +320,42 @@ export const newsletterSubscribers = pgTable("newsletter_subscriber", {
   email: text("email").notNull().unique(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+// ---------------------------------------------------------------------------
+// Wishlist — signed-in shoppers can save a one-of-one piece for later.
+// Requires an account (unlike the cart, which works anonymously off a
+// cookie) since the whole point is finding it again on a future visit.
+// ---------------------------------------------------------------------------
+
+export const wishlistItems = pgTable(
+  "wishlist_item",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    // A shopper can only save a given piece once — toggling the heart again
+    // removes it rather than creating a duplicate row.
+    uniqueIndex("wishlist_item_user_product_idx").on(
+      table.userId,
+      table.productId
+    ),
+    index("wishlist_item_user_id_idx").on(table.userId),
+  ]
+);
+
+export const wishlistItemsRelations = relations(wishlistItems, ({ one }) => ({
+  user: one(users, { fields: [wishlistItems.userId], references: [users.id] }),
+  product: one(products, {
+    fields: [wishlistItems.productId],
+    references: [products.id],
+  }),
+}));

@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { useCartStore } from "@/lib/cart-store";
+import { useRecentlyViewedStore } from "@/lib/recently-viewed-store";
 
 /**
  * Zustand's `persist` middleware reads localStorage after mount, so the
@@ -15,6 +16,17 @@ export function useCartHydrated() {
   return useSyncExternalStore(
     (callback) => useCartStore.persist.onFinishHydration(callback),
     () => useCartStore.persist.hasHydrated(),
+    () => false
+  );
+}
+
+/** Same hydration-guard pattern as useCartHydrated, for the "recently
+ * viewed" store — avoids a server/client mismatch since that list also
+ * only exists in localStorage. */
+export function useRecentlyViewedHydrated() {
+  return useSyncExternalStore(
+    (callback) => useRecentlyViewedStore.persist.onFinishHydration(callback),
+    () => useRecentlyViewedStore.persist.hasHydrated(),
     () => false
   );
 }

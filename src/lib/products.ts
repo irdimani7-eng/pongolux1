@@ -9,21 +9,13 @@ import type {
   FilterOptions,
 } from "@/lib/types";
 
-/** An item counts as "on sale" once it has a compare-at price higher than
- * its current price — one field drives both the strikethrough price display
- * and the /shop/price-drops collection, so there's no separate flag that
- * could drift out of sync with the actual prices. */
-export function isOnSale(product: {
-  compareAtPriceCents: number | null;
-  priceCents: number;
-}) {
-  return (
-    product.compareAtPriceCents != null &&
-    product.compareAtPriceCents > product.priceCents
-  );
-}
+// Re-exported for existing callers — the implementation now lives in
+// product-helpers.ts (a DB-free module) so components that need it in a
+// client bundle (ProductCard, via the RecentlyViewed strip) can import it
+// without pulling this file's `db`/postgres import along with it.
+export { isOnSale } from "@/lib/product-helpers";
 
-async function primaryImageUrl(productId: string) {
+export async function primaryImageUrl(productId: string) {
   const [image] = await db
     .select({ url: productImages.url })
     .from(productImages)

@@ -5,6 +5,9 @@ import { AddToCartButton } from "@/components/add-to-cart-button";
 import { ProductGallery } from "@/components/product-gallery";
 import { ProductCard } from "@/components/product-card";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { WishlistButton } from "@/components/wishlist-button";
+import { RecentlyViewedTracker } from "@/components/recently-viewed-tracker";
+import { RecentlyViewed } from "@/components/recently-viewed";
 import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -102,6 +105,8 @@ export default async function ProductPage({
           { label: product.title },
         ]}
       />
+      <RecentlyViewedTracker product={product} />
+
       <div className="grid gap-10 lg:grid-cols-2">
         <ProductGallery
           images={product.images}
@@ -141,8 +146,11 @@ export default async function ProductPage({
             )}
           </dl>
 
-          <div className="mt-6">
-            <AddToCartButton product={product} />
+          <div className="mt-6 flex items-center gap-3">
+            <div className="flex-1">
+              <AddToCartButton product={product} />
+            </div>
+            <WishlistButton productId={product.id} variant="labeled" />
           </div>
 
           {product.authentication && (
@@ -201,6 +209,8 @@ export default async function ProductPage({
           </div>
         </div>
       )}
+
+      <RecentlyViewed excludeProductId={product.id} />
     </div>
   );
 }

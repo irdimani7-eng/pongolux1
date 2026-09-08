@@ -1,10 +1,64 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
 import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 type GalleryImage = { url: string; alt: string };
+
+function pointFromEvent(e: MouseEvent<HTMLDivElement>) {
+  const rect = e.currentTarget.getBoundingClientRect();
+  return {
+    x: ((e.clientX - rect.left) / rect.width) * 100,
+    y: ((e.clientY - rect.top) / rect.height) * 100,
+  };
+}
+
+/** The lightbox's photo, with click-to-zoom for inspecting details like
+ * hardware/stitching that "fit to screen" alone doesn't show clearly.
+ * `origin` is the click point as a % of the image box, used as the CSS
+ * transform-origin so zooming in centers on where you clicked
+ * (approximate under letterboxing from object-contain, but close enough
+ * for a resale-authenticity inspection, not pixel-perfect measurement).
+ * Rendered with `key={index}` by the parent so navigating to a different
+ * photo remounts this component and its zoom state resets for free —
+ * no effect needed to sync it back to "not zoomed". */
+function ZoomableImage({ url, alt }: { url: string; alt: string }) {
+  const [zoomed, setZoomed] = useState(false);
+  const [origin, setOrigin] = useState({ x: 50, y: 50 });
+
+  return (
+    <>
+      <div
+        className="relative h-[85vh] w-full max-w-4xl overflow-hidden"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOrigin(pointFromEvent(e));
+          setZoomed((z) => !z);
+        }}
+        onMouseMove={(e) => {
+          if (zoomed) setOrigin(pointFromEvent(e));
+        }}
+        style={{ cursor: zoomed ? "zoom-out" : "zoom-in" }}
+      >
+        <Image
+          src={url}
+          alt={alt}
+          fill
+          sizes="100vw"
+          className="object-contain transition-transform duration-200 ease-out"
+          style={{
+            transform: zoomed ? "scale(2.2)" : "scale(1)",
+            transformOrigin: `${origin.x}% ${origin.y}%`,
+          }}
+        />
+      </div>
+      <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs text-white/60">
+        {zoomed ? "Click to zoom out" : "Click photo to zoom in"}
+      </p>
+    </>
+  );
+}
 
 /**
  * The same thumbnail grid as before, but each photo now opens a full-screen
@@ -110,18 +164,11 @@ export function ProductGallery({
             </button>
           )}
 
-          <div
-            className="relative h-[85vh] w-full max-w-4xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Image
-              src={current.url}
-              alt={current.alt || fallbackAlt}
-              fill
-              sizes="100vw"
-              className="object-contain"
-            />
-          </div>
+          <ZoomableImage
+            key={openIndex}
+            url={current.url}
+            alt={current.alt || fallbackAlt}
+          />
 
           {list.length > 1 && (
             <button

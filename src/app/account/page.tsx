@@ -4,6 +4,8 @@ import { db } from "@/db";
 import { orders, orderItems } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { formatPrice } from "@/lib/format";
+import { getWishlistProducts } from "@/lib/wishlist";
+import { ProductCard } from "@/components/product-card";
 
 export default async function AccountPage() {
   const session = await auth();
@@ -23,6 +25,8 @@ export default async function AccountPage() {
       .where(eq(orderItems.orderId, order.id));
     itemsByOrder.set(order.id, items);
   }
+
+  const savedItems = await getWishlistProducts(session.user.id);
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
@@ -54,6 +58,19 @@ export default async function AccountPage() {
             </li>
           ))}
         </ul>
+      )}
+
+      <h2 className="mt-10 text-lg font-medium">Saved items</h2>
+      {savedItems.length === 0 ? (
+        <p className="mt-2 text-sm text-muted-foreground">
+          Nothing saved yet — tap the heart on any listing to keep it here.
+        </p>
+      ) : (
+        <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">
+          {savedItems.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
       )}
     </div>
   );

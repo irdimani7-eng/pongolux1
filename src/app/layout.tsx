@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { WishlistProvider } from "@/components/wishlist-provider";
+import { auth } from "@/lib/auth";
+import { getWishlistProductIds } from "@/lib/wishlist";
 import "./globals.css";
 
 // Fonts: this scaffold intentionally uses system font stacks (defined in
@@ -88,7 +91,17 @@ const organizationJsonLd = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const session = await auth();
+  const signedIn = Boolean(session?.user?.id);
+  // Seeded once here (server-side) rather than fetched client-side, so
+  // every heart icon on the page — product cards, product detail — lights
+  // up correctly on first paint instead of flashing "unsaved" then
+  // catching up.
+  const initialWishlistIds = signedIn
+    ? await getWishlistProductIds(session!.user!.id!)
+    : [];
+
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-background text-foreground">
@@ -98,9 +111,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             __html: JSON.stringify(organizationJsonLd).replace(/</g, "\\u003c"),
           }}
         />
-        <SiteHeader />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
+        <WishlistProvider initialIds={initialWishlistIds} signedIn={signedIn}>
+          <SiteHeader />
+          <main className="flex-1">{children}</main>
+          <SiteFooter />
+        </WishlistProvider>
         {/* Vercel Analytics — zero-config visitor/page-view tracking, no
             cookie banner needed (it's cookieless/privacy-friendly by
             default). View traffic in the Vercel dashboard's Analytics tab
