@@ -4,6 +4,7 @@ import { InstagramIcon } from "@/components/social-icons";
 import { MessageCircle } from "lucide-react";
 import { SOCIAL_LINKS } from "@/lib/social-links";
 import { NewsletterSignupForm } from "@/components/newsletter-signup-form";
+import { PaymentMethods } from "@/components/payment-methods";
 
 export function SiteFooter() {
   return (
@@ -119,6 +120,9 @@ export function SiteFooter() {
             <li>Chicago, IL</li>
           </ul>
         </div>
+      </div>
+      <div className="border-t border-border px-6 py-6">
+        <PaymentMethods />
       </div>
       <div className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
         <p>© {new Date().getFullYear()} PONGOLUX LLC. All rights reserved.</p>

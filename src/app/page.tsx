@@ -5,7 +5,8 @@ import { HeroBanner } from "@/components/hero-banner";
 import { listProducts, getFilterOptions } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
 import { BRAND_STORIES } from "@/lib/brand-stories";
-import { ShieldCheck, Truck, Clock, Sparkles, Leaf } from "lucide-react";
+import { Sparkles, Leaf } from "lucide-react";
+import { TrustBar } from "@/components/trust-bar";
 
 export default async function HomePage() {
   const [allAvailable, mostWanted, { brands }] = await Promise.all([
@@ -34,22 +35,7 @@ export default async function HomePage() {
         secondaryCta={{ href: "/#authentication", label: "How authentication works" }}
       />
 
-      <section className="border-y border-border bg-muted/40">
-        <div className="mx-auto grid max-w-6xl gap-8 px-6 py-10 text-sm sm:grid-cols-3">
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="size-5 shrink-0" strokeWidth={1.5} />
-            <span>Every item independently authenticated</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Truck className="size-5 shrink-0" strokeWidth={1.5} />
-            <span>Free shipping</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <Clock className="size-5 shrink-0" strokeWidth={1.5} />
-            <span>Ships within 3 days</span>
-          </div>
-        </div>
-      </section>
+      <TrustBar />
 
       {brands.length > 0 && (
         <section className="mx-auto max-w-6xl px-6 py-12">
