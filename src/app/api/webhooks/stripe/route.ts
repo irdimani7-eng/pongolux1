@@ -2,7 +2,7 @@ import { getStripe } from "@/lib/stripe";
 import { db } from "@/db";
 import { orders, orderItems, products, addresses } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderConfirmationEmail, sendNewOrderNotificationEmail } from "@/lib/email";
 import type Stripe from "stripe";
 
 export async function POST(req: Request) {
@@ -98,28 +98,30 @@ export async function POST(req: Request) {
         .where(eq(products.id, item.productId));
     }
 
-    if (order.email) {
-      let shippingAddress: {
-        fullName: string;
-        line1: string;
-        line2: string | null;
-        city: string;
-        state: string;
-        postalCode: string;
-        country: string;
-      } | null = null;
-      if (shippingAddressId) {
-        const [addr] = await db
-          .select()
-          .from(addresses)
-          .where(eq(addresses.id, shippingAddressId))
-          .limit(1);
-        if (addr) shippingAddress = addr;
-      }
+    let shippingAddress: {
+      fullName: string;
+      line1: string;
+      line2: string | null;
+      city: string;
+      state: string;
+      postalCode: string;
+      country: string;
+    } | null = null;
+    if (shippingAddressId) {
+      const [addr] = await db
+        .select()
+        .from(addresses)
+        .where(eq(addresses.id, shippingAddressId))
+        .limit(1);
+      if (addr) shippingAddress = addr;
+    }
 
-      // The order/product DB updates above already succeeded — don't let
-      // a Resend failure turn into a 500 here, which would make Stripe
-      // retry a webhook that already did its actual job.
+    // The order/product DB updates above already succeeded — don't let a
+    // Resend failure turn into a 500 here, which would make Stripe retry
+    // a webhook that already did its actual job. Both emails are sent
+    // independently so a failure on one (e.g. a bad customer email
+    // address) doesn't also swallow the internal sale notification.
+    if (order.email) {
       try {
         await sendOrderConfirmationEmail({
           to: order.email,
@@ -134,6 +136,21 @@ export async function POST(req: Request) {
       } catch (err) {
         console.error("Failed to send order confirmation email for order", order.id, err);
       }
+    }
+
+    try {
+      await sendNewOrderNotificationEmail({
+        orderId: order.id,
+        buyerEmail: order.email ?? "(no email on file)",
+        items,
+        subtotalCents: order.subtotalCents,
+        shippingCents: order.shippingCents,
+        totalCents,
+        taxCents,
+        shippingAddress,
+      });
+    } catch (err) {
+      console.error("Failed to send new order notification email for order", order.id, err);
     }
   }
 

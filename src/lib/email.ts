@@ -168,6 +168,101 @@ export async function sendOrderConfirmationEmail(params: {
   console.log("Order confirmation email sent, Resend id:", data?.id);
 }
 
+/** Internal "you made a sale" notice — sent to the business inbox
+ * (not the customer) every time an order is marked paid, so Irdi finds
+ * out immediately instead of having to check /admin/orders herself.
+ * Deliberately separate from sendOrderConfirmationEmail (customer-facing)
+ * even though the content overlaps, since the audience and the "reply
+ * to" behavior differ and they may want to look different later. */
+export async function sendNewOrderNotificationEmail(params: {
+  orderId: string;
+  buyerEmail: string;
+  items: { title: string; priceCents: number; imageUrl: string | null }[];
+  subtotalCents: number;
+  shippingCents: number;
+  totalCents: number;
+  taxCents?: number;
+  shippingAddress?: {
+    fullName: string;
+    line1: string;
+    line2: string | null;
+    city: string;
+    state: string;
+    postalCode: string;
+    country: string;
+  } | null;
+}) {
+  if (!resend) {
+    console.warn(
+      "RESEND_API_KEY not set — skipping new order notification for",
+      params.orderId
+    );
+    return;
+  }
+
+  const itemsHtml = params.items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding:10px 0;border-bottom:1px solid #efe9e0;" width="64">
+          ${
+            item.imageUrl
+              ? `<img src="${item.imageUrl}" width="56" height="56" style="border-radius:6px;object-fit:cover;display:block;" alt="${item.title}" />`
+              : ""
+          }
+        </td>
+        <td style="padding:10px 0 10px 12px;border-bottom:1px solid #efe9e0;font-size:13px;">${item.title}</td>
+        <td style="padding:10px 0;border-bottom:1px solid #efe9e0;text-align:right;font-size:13px;white-space:nowrap;">
+          $${(item.priceCents / 100).toFixed(2)}
+        </td>
+      </tr>`
+    )
+    .join("");
+
+  const addressHtml = params.shippingAddress
+    ? `<p style="margin:16px 0 0;color:#57534e;">
+         Ship to:<br />
+         ${params.shippingAddress.fullName}<br />
+         ${params.shippingAddress.line1}${params.shippingAddress.line2 ? `, ${params.shippingAddress.line2}` : ""}<br />
+         ${params.shippingAddress.city}, ${params.shippingAddress.state} ${params.shippingAddress.postalCode}<br />
+         ${params.shippingAddress.country}
+       </p>`
+    : `<p style="margin:16px 0 0;color:#b45309;">No shipping address on file for this order.</p>`;
+
+  const body = `
+    <h1 style="margin:0 0 4px;font-size:20px;">New order — #${params.orderId.slice(0, 8)}</h1>
+    <p style="margin:0 0 20px;color:#57534e;">
+      From: ${params.buyerEmail}
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      ${itemsHtml}
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;">
+      ${moneyRow("Subtotal", params.subtotalCents)}
+      ${moneyRow("Shipping", params.shippingCents)}
+      ${params.taxCents && params.taxCents > 0 ? moneyRow("Tax", params.taxCents) : ""}
+      ${moneyRow("Total", params.totalCents, { bold: true })}
+    </table>
+    ${addressHtml}
+    <p style="margin:20px 0 0;">
+      <a href="${SITE_URL}/admin/orders/${params.orderId}" style="color:#a3814f;">View this order in the admin dashboard →</a>
+    </p>
+  `;
+
+  const { data, error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
+    to: "support@pongolux.com",
+    subject: `New order #${params.orderId.slice(0, 8)} — $${(params.totalCents / 100).toFixed(2)}`,
+    html: emailShell(body),
+  });
+
+  if (error) {
+    console.error("Resend rejected new order notification email:", error);
+    throw new Error(`Resend error (${error.name}): ${error.message}`);
+  }
+  console.log("New order notification email sent, Resend id:", data?.id);
+}
+
 export async function sendOrderShippedEmail(params: {
   to: string;
   orderId: string;
