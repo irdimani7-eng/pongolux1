@@ -1,20 +1,27 @@
 import Link from "next/link";
 import { Crown } from "lucide-react";
 
-/** A curated "Shop by brand" showcase (Irdi's pick of the 5 most
- * important brands, not derived from live inventory) — replaces the
- * earlier auto-scrolling marquee, which read as broken/hard to use since
- * there was no way to scroll it manually. Hermès sits in the center,
- * visually elevated (bigger card + a crown) as the flagship brand, with
- * Louis Vuitton and Christian Dior flanking it and Gucci/Fendi on the
- * outer edges. `overflow-x-auto` keeps this order intact on narrow
- * screens (swipe instead of wrap) rather than reflowing the hierarchy. */
+/** A curated "Shop by brand" showcase (Irdi's pick of brands, not derived
+ * from live inventory) — replaces the earlier auto-scrolling marquee,
+ * which read as broken/hard to use since there was no way to scroll it
+ * manually. Hermès sits in the center, visually elevated (bigger card +
+ * a crown) as the flagship brand, with the other 8 brands flanking it
+ * evenly (4 on each side) in consistent card styling. Expanded from the
+ * original 5 to 9 brands on 2026-09-10 per Irdi's request.
+ * `overflow-x-auto` keeps this order intact on narrow screens (swipe
+ * instead of wrap) rather than reflowing the hierarchy — with 9 cards
+ * this row is now wider than most desktop viewports too, so scrolling
+ * horizontally is expected there as well, not just on mobile. */
 const FEATURED_BRANDS = [
+  { name: "Celine", featured: false },
+  { name: "Prada", featured: false },
   { name: "Gucci", featured: false },
   { name: "Louis Vuitton", featured: false },
   { name: "Hermès", featured: true },
   { name: "Christian Dior", featured: false },
+  { name: "Chanel", featured: false },
   { name: "Fendi", featured: false },
+  { name: "Bottega Veneta", featured: false },
 ] as const;
 
 export function FeaturedBrands() {
