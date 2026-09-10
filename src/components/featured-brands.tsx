@@ -34,7 +34,7 @@ const FEATURED_BRANDS = [
 
 const CARD_CLASSES: Record<(typeof FEATURED_BRANDS)[number]["size"], string> = {
   featured:
-    "relative flex h-36 w-52 shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-accent bg-surface px-4 text-center shadow-lg transition duration-200 hover:-translate-y-1 hover:shadow-xl sm:h-44 sm:w-64",
+    "relative flex h-32 w-44 shrink-0 flex-col items-center justify-center gap-3 rounded-2xl border-2 border-accent bg-surface px-4 text-center shadow-lg transition duration-200 hover:-translate-y-1 hover:shadow-xl sm:h-40 sm:w-56",
   medium:
     "flex h-28 w-40 shrink-0 flex-col items-center justify-center gap-2.5 rounded-2xl border border-border bg-surface px-4 text-center shadow-sm transition duration-200 hover:-translate-y-1 hover:border-accent hover:shadow-lg sm:w-44",
   small:
@@ -42,7 +42,7 @@ const CARD_CLASSES: Record<(typeof FEATURED_BRANDS)[number]["size"], string> = {
 };
 
 const NAME_CLASSES: Record<(typeof FEATURED_BRANDS)[number]["size"], string> = {
-  featured: "font-(family-name:--font-display) text-2xl",
+  featured: "font-(family-name:--font-display) text-xl sm:text-2xl",
   medium: "font-(family-name:--font-display) text-lg",
   small: "font-(family-name:--font-display) text-sm sm:text-base",
 };
