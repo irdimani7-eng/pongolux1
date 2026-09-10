@@ -8,8 +8,9 @@ const TRUST_ITEMS: {
   detail: string;
 }[] = [
   {
-    title: "Authenticity Guaranteed",
-    detail: "Every piece verified by Entrupy plus a hands-on expert review",
+    icon: Truck,
+    title: "Free Shipping",
+    detail: "On every order, ships within 3 business days",
   },
   {
     icon: Gem,
@@ -17,9 +18,8 @@ const TRUST_ITEMS: {
     detail: "Each item is a single, unique find — once it's sold, it's gone",
   },
   {
-    icon: Truck,
-    title: "Free Shipping",
-    detail: "On every order, ships within 3 business days",
+    title: "Authenticity Guaranteed",
+    detail: "Every piece verified by Entrupy plus a hands-on expert review",
   },
   {
     icon: RotateCcw,
