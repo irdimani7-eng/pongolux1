@@ -65,6 +65,23 @@ each one:
   to this project, and Vercel adds this env var automatically (redeploy
   after connecting it). Not needed to run the site locally unless you want
   to test the admin photo upload flow from your machine too.
+- `EBAY_APP_ID` / `EBAY_CERT_ID` / `EBAY_RU_NAME` — from your [eBay
+  Developer Program](https://developer.ebay.com) account's keyset (App ID,
+  Cert ID, and the redirect URI name you register there). Powers listing
+  products on eBay from `/admin/products/[id]/edit` — see `src/lib/ebay.ts`
+  for the full integration and its account-side prerequisites (Business
+  Policies + an inventory location must already exist in eBay Seller Hub).
+  Site works fine with these unset; the "List on eBay" button just won't
+  do anything until they're set and the one-time connect flow at
+  `/admin/ebay` has been completed.
+- `EBAY_ENVIRONMENT` — `sandbox` (default) or `production`. Test in
+  sandbox first with a sandbox keyset before switching to production.
+- `CRON_SECRET` — any random string you generate yourself. Protects
+  `/api/cron/ebay-orders` (the job that notices when a product sold on
+  eBay and marks it sold on the website) from being triggered by anyone
+  who finds the URL. See that route's own comments for how to actually
+  schedule it — a free external scheduler like cron-job.org works on any
+  Vercel plan; a `vercel.json` cron entry needs Vercel Pro.
 
 ## Why Drizzle, not Prisma
 

@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { products, productImages, authenticationRecords } from "@/db/schema";
 import { and, asc, desc, eq, gt, gte, lt, ne, notInArray, or, ilike, sql } from "drizzle-orm";
-import { PRICE_RANGES } from "@/lib/format";
+import { PRICE_RANGES, toAbsoluteImageUrl } from "@/lib/format";
 import type {
   ProductDetail,
   ProductListItem,
@@ -200,6 +200,42 @@ export async function getMerchantFeedProducts() {
       imageUrl: await primaryImageUrl(product.id),
     }))
   );
+}
+
+/** Everything src/lib/ebay.ts needs to publish one product as an eBay
+ * listing — unlike the Merchant Center feed (which only sends a primary
+ * image), this includes every photo, since eBay listings both allow and
+ * benefit from multiple images. */
+export async function getProductForEbay(productId: string) {
+  const [product] = await db
+    .select()
+    .from(products)
+    .where(eq(products.id, productId))
+    .limit(1);
+  if (!product) return null;
+
+  const images = await db
+    .select({ url: productImages.url })
+    .from(productImages)
+    .where(eq(productImages.productId, productId))
+    .orderBy(asc(productImages.position));
+
+  return {
+    sku: product.sku,
+    title: product.title,
+    description:
+      product.description?.trim() ||
+      `${product.brand} ${product.model} — authenticated pre-owned ${product.category}.`,
+    brand: product.brand,
+    color: product.color,
+    category: product.category,
+    condition: product.condition,
+    priceCents: product.priceCents,
+    currency: product.currency,
+    // eBay's Inventory API requires fully-qualified image URLs — same
+    // fix as the Merchant Center feed needed, see toAbsoluteImageUrl.
+    imageUrls: images.map((i) => toAbsoluteImageUrl(i.url)),
+  };
 }
 
 export async function getProductBySku(

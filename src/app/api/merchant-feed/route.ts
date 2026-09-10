@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getMerchantFeedProducts } from "@/lib/products";
+import { toAbsoluteImageUrl } from "@/lib/format";
 
 // Always hit the database fresh — this route exists specifically so Google
 // re-fetches current inventory on its own schedule, so there's nothing to
@@ -49,6 +50,18 @@ function fallbackDescription(p: Awaited<
     .join(" ");
 }
 
+// Google requires gender + age_group for anything filed under Apparel &
+// Accessories (which Handbags, Wallets & Cases is a child of) — without
+// them, Merchant Center flags the item as having "missing or invalid
+// fields" even though the feed otherwise validates fine. PongoLux's
+// catalog is, as far as it goes today, entirely women's designer pieces
+// with no separate gender field of its own to draw from, so this is a
+// deliberate blanket default rather than a per-product value — worth
+// revisiting (adding a real admin-editable field) if the catalog ever
+// includes an item marketed as men's or unisex.
+const DEFAULT_GENDER = "female";
+const DEFAULT_AGE_GROUP = "adult";
+
 // Column order doesn't matter to Merchant Center (it matches on the header
 // names), but keeping ours fixed makes every row easy to eyeball.
 const COLUMNS = [
@@ -64,6 +77,8 @@ const COLUMNS = [
   "google_product_category",
   "product_type",
   "color",
+  "gender",
+  "age_group",
   "identifier_exists",
 ] as const;
 
@@ -78,7 +93,14 @@ export async function GET() {
       title: tsvSafe(p.title),
       description,
       link: `${SITE_URL}/product/${p.sku}`,
-      image_link: p.imageUrl ?? "",
+      // p.imageUrl may be a site-relative path left over from the
+      // original bulk catalog import ("/products/<sku>/1.webp") rather
+      // than an absolute Vercel Blob URL — Google's feed spec requires a
+      // fully-qualified URL here, so a relative path was silently
+      // producing an effectively-missing image_link and getting those
+      // specific items disapproved. See toAbsoluteImageUrl in
+      // src/lib/format.ts.
+      image_link: p.imageUrl ? toAbsoluteImageUrl(p.imageUrl) : "",
       // Google's feed spec uses spaced values here ("in stock"), not the
       // underscored "in_stock" the JSON Content/Merchant API uses — worth
       // confirming zero "invalid availability" errors in Merchant Center's
@@ -90,6 +112,8 @@ export async function GET() {
       google_product_category: GOOGLE_PRODUCT_CATEGORY[p.category] ?? "",
       product_type: tsvSafe(`${p.brand} ${p.category}`),
       color: tsvSafe(p.color),
+      gender: DEFAULT_GENDER,
+      age_group: DEFAULT_AGE_GROUP,
       // Every PongoLux item is one-of-one with no manufacturer GTIN/MPN on
       // file — "no" tells Google not to require or penalize their absence,
       // the standard setting for unique/vintage/handmade goods.

@@ -263,6 +263,66 @@ export async function sendNewOrderNotificationEmail(params: {
   console.log("New order notification email sent, Resend id:", data?.id);
 }
 
+/** Fired from the eBay order-sync poll (src/lib/ebay.ts, syncEbayOrders)
+ * whenever it finds a PongoLux item that sold on eBay — the website side
+ * (order records, packing lists) only exists for pongolux.com checkouts,
+ * so this is the one alert that a piece needs to ship from an eBay sale,
+ * unlike a website order which already shows up in /admin/orders. */
+export async function sendEbaySaleNotificationEmail(params: {
+  productTitle: string;
+  sku: string;
+  ebayOrderId: string;
+}) {
+  if (!resend) {
+    console.warn(
+      "RESEND_API_KEY not set — skipping eBay sale notification for",
+      params.sku
+    );
+    return;
+  }
+
+  const body = `
+    <h1 style="margin:0 0 4px;font-size:20px;">Sold on eBay</h1>
+    <p style="margin:0 0 20px;color:#57534e;">
+      This piece just sold on eBay — the website listing has already been
+      marked sold and the eBay offer ended automatically. It still needs
+      to ship like any other order.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td style="padding:4px 0;color:#57534e;">Item</td>
+        <td style="padding:4px 0;text-align:right;">${params.productTitle}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;color:#57534e;">SKU</td>
+        <td style="padding:4px 0;text-align:right;">${params.sku}</td>
+      </tr>
+      <tr>
+        <td style="padding:4px 0;color:#57534e;">eBay order</td>
+        <td style="padding:4px 0;text-align:right;">${params.ebayOrderId}</td>
+      </tr>
+    </table>
+    <p style="margin:20px 0 0;">
+      Find the buyer's shipping details and mark it shipped in eBay's own
+      Seller Hub — this order doesn't appear in /admin/orders since it
+      didn't go through PongoLux's own checkout.
+    </p>
+  `;
+
+  const { data, error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
+    to: "support@pongolux.com",
+    subject: `Sold on eBay — ${params.productTitle}`,
+    html: emailShell(body),
+  });
+
+  if (error) {
+    console.error("Resend rejected eBay sale notification email:", error);
+    throw new Error(`Resend error (${error.name}): ${error.message}`);
+  }
+  console.log("eBay sale notification email sent, Resend id:", data?.id);
+}
+
 export async function sendOrderShippedEmail(params: {
   to: string;
   orderId: string;

@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { orders, orderItems, products, addresses } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { sendOrderConfirmationEmail, sendNewOrderNotificationEmail } from "@/lib/email";
+import { endEbayListingForProduct } from "@/lib/ebay";
 import type Stripe from "stripe";
 
 export async function POST(req: Request) {
@@ -96,6 +97,23 @@ export async function POST(req: Request) {
         .update(products)
         .set({ status: "sold", reservedUntil: null, reservedByCartId: null })
         .where(eq(products.id, item.productId));
+
+      // A one-of-one piece that just sold on the website can't still be
+      // sitting live on eBay — end it there too. Best-effort: an eBay
+      // hiccup here must never block the order/product updates above,
+      // which already succeeded and matter far more (same reasoning as
+      // the email sends below). If this does fail, it's recorded on the
+      // product's ebay_listing row (see endEbayListingForProduct) so it's
+      // visible on the product's admin edit page rather than only here.
+      try {
+        await endEbayListingForProduct(item.productId);
+      } catch (err) {
+        console.error(
+          "Failed to end eBay listing after website sale for product",
+          item.productId,
+          err
+        );
+      }
     }
 
     let shippingAddress: {

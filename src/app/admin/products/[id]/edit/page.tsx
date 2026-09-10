@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { getProductForAdmin } from "@/lib/admin-data";
 import { updateProductAction } from "@/lib/actions/admin-products";
 import { ProductForm } from "@/components/admin/product-form";
+import { EbayListingPanel } from "@/components/admin/ebay-listing-panel";
+import { getEbayListingForProduct, isEbayConnected } from "@/lib/ebay";
 
 export default async function EditProductPage({
   params,
@@ -11,6 +13,11 @@ export default async function EditProductPage({
   const { id } = await params;
   const product = await getProductForAdmin(id);
   if (!product) notFound();
+
+  const [ebayListing, ebayConnected] = await Promise.all([
+    getEbayListingForProduct(id),
+    isEbayConnected(),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -55,6 +62,12 @@ export default async function EditProductPage({
           url: img.url,
           alt: img.alt,
         }))}
+      />
+
+      <EbayListingPanel
+        productId={product.id}
+        listing={ebayListing}
+        ebayConnected={ebayConnected}
       />
     </div>
   );

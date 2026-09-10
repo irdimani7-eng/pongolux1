@@ -514,3 +514,85 @@ export const dreamInquiries = pgTable(
 export const dreamInquiriesRelations = relations(dreamInquiries, ({ one }) => ({
   user: one(users, { fields: [dreamInquiries.userId], references: [users.id] }),
 }));
+
+// ---------------------------------------------------------------------------
+// eBay integration — see src/lib/ebay.ts for the API client this backs.
+// Single-seller app, so `ebay_connection` only ever holds one meaningful
+// row (the most recently updated one is the one in use); it's still a
+// table rather than a config value because the tokens are runtime state
+// eBay hands back, not something we choose.
+// ---------------------------------------------------------------------------
+
+export const ebayConnections = pgTable("ebay_connection", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  environment: text("environment", {
+    enum: ["sandbox", "production"],
+  }).notNull(),
+  // eBay's own identifier for the connected seller account — populated
+  // once known, mainly so /admin can show "connected as ..." rather than
+  // just a blind "connected" state.
+  ebayUserId: text("ebay_user_id"),
+  refreshToken: text("refresh_token").notNull(),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at").notNull(),
+  // Cached short-lived access token, refreshed on demand once it's close to
+  // expiring — see getValidAccessToken() in src/lib/ebay.ts. Nullable since
+  // a freshly-stored connection (right after the OAuth callback) already
+  // has one, but nothing stops it from being cleared/regenerated.
+  accessToken: text("access_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  scopes: text("scopes").notNull(),
+  // Watermark for the inbound order-sync poll (src/lib/ebay.ts,
+  // syncEbayOrders) — only orders modified after this are fetched each
+  // run, so a 15-minute (or daily, on Vercel's Hobby plan) poll doesn't
+  // re-scan eBay's entire order history every time.
+  lastOrderSyncAt: timestamp("last_order_sync_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// One row per product that's ever been pushed to eBay. `status` reflects
+// what PongoLux believes the eBay-side state is — kept in sync by the
+// publish action, the Stripe-webhook-triggered withdraw (a website sale
+// ends the eBay listing), and the order-polling job (an eBay sale marks
+// the product sold on the website) — see src/lib/ebay.ts and the Stripe
+// webhook route for where each of those lives.
+export const ebayListings = pgTable(
+  "ebay_listing",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    productId: text("product_id")
+      .notNull()
+      .unique()
+      .references(() => products.id, { onDelete: "cascade" }),
+    // Same value as product.sku — eBay's Inventory API keys everything by
+    // seller SKU, kept as its own column so a listing's identity doesn't
+    // silently break if a product's SKU is ever edited after publishing.
+    sku: text("sku").notNull(),
+    offerId: text("offer_id"),
+    ebayListingId: text("ebay_listing_id"),
+    status: text("status", {
+      enum: ["draft", "active", "ended", "error"],
+    })
+      .notNull()
+      .default("draft"),
+    // Set whenever an eBay API call in the publish/withdraw pipeline
+    // fails, so a failure is visible on the product's admin edit page
+    // instead of only in server logs. Cleared on the next successful call.
+    lastError: text("last_error"),
+    lastSyncedAt: timestamp("last_synced_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("ebay_listing_status_idx").on(table.status)]
+);
+
+export const ebayListingsRelations = relations(ebayListings, ({ one }) => ({
+  product: one(products, {
+    fields: [ebayListings.productId],
+    references: [products.id],
+  }),
+}));

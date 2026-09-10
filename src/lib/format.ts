@@ -2,6 +2,24 @@
 // optional add-on. See /shipping-returns for the full policy.
 export const SHIPPING_INSURANCE_CENTS = 2000;
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+/** Some product photo URLs in the database are absolute (anything
+ * uploaded through /admin goes to Vercel Blob), but photos from the
+ * original bulk catalog import were stored as site-relative paths like
+ * "/products/<sku>/1.webp" (see scripts/import-products.ts) — those
+ * render fine on pongolux.com itself, but any code sending a photo URL to
+ * an external service (Google Merchant Center, eBay) needs a fully-
+ * qualified URL, since a relative path has no page to resolve against in
+ * a data feed or API call. This is what was silently producing an
+ * effectively-empty image_link for those specific items in the Merchant
+ * Center feed — found via a "Not approved" status on exactly the items
+ * still using the old relative-path photos. */
+export function toAbsoluteImageUrl(url: string): string {
+  if (/^https?:\/\//i.test(url)) return url;
+  return `${SITE_URL}${url.startsWith("/") ? "" : "/"}${url}`;
+}
+
 export function formatPrice(cents: number, currency = "usd") {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
