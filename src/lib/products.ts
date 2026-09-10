@@ -167,6 +167,41 @@ export async function getRelatedProducts(
   );
 }
 
+/** Everything the Google Merchant Center feed route (src/app/api/
+ * merchant-feed/route.ts) needs per item. Deliberately queries `status ===
+ * "available"` only — not "reserved" — since a reserved item is mid-
+ * checkout and could flip to "sold" within minutes; leaving it out of the
+ * feed means Google Shopping never sends a shopper to something that's
+ * likely to vanish before they can buy it. Sold/archived items are simply
+ * absent from the feed entirely (rather than submitted as out_of_stock) —
+ * fine at this catalog size, and Merchant Center's own default expiry
+ * handles anything that drops out of a feed it was previously in. */
+export async function getMerchantFeedProducts() {
+  const rows = await db
+    .select()
+    .from(products)
+    .where(eq(products.status, "available"))
+    .orderBy(desc(products.createdAt));
+
+  return Promise.all(
+    rows.map(async (product) => ({
+      sku: product.sku,
+      brand: product.brand,
+      model: product.model,
+      title: product.title,
+      description: product.description,
+      conditionNotes: product.conditionNotes,
+      dimensions: product.dimensions,
+      color: product.color,
+      category: product.category,
+      condition: product.condition,
+      priceCents: product.priceCents,
+      currency: product.currency,
+      imageUrl: await primaryImageUrl(product.id),
+    }))
+  );
+}
+
 export async function getProductBySku(
   sku: string
 ): Promise<ProductDetail | null> {
