@@ -6,9 +6,8 @@ import { eq } from "drizzle-orm";
 import { formatPrice } from "@/lib/format";
 import { ClearCartOnMount } from "@/components/clear-cart-on-mount";
 import { getStripe } from "@/lib/stripe";
+import { GOOGLE_MERCHANT_ID } from "@/lib/google-merchant";
 import { CheckCircle2 } from "lucide-react";
-
-const GOOGLE_MERCHANT_ID = 5397913684;
 
 // PongoLux's stated policy is "ships within 3 business days" (see
 // about/shipping-returns pages), plus a domestic transit estimate. Google

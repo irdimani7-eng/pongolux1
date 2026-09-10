@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { WishlistProvider } from "@/components/wishlist-provider";
 import { auth } from "@/lib/auth";
 import { getWishlistProductIds } from "@/lib/wishlist";
+import { GOOGLE_MERCHANT_ID } from "@/lib/google-merchant";
 import "./globals.css";
 
 // Fonts: this scaffold intentionally uses system font stacks (defined in
@@ -121,6 +123,39 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
             default). View traffic in the Vercel dashboard's Analytics tab
             once deployed; does nothing extra locally. */}
         <Analytics />
+
+        {/* Google Customer Reviews badge — optional (per Merchant
+            Center's own "Getting started" copy), separate from the
+            required survey opt-in module on the checkout success page.
+            Shows PongoLux's aggregate seller rating once enough real
+            reviews have come in from that opt-in flow; shows "no rating
+            available" until then, which is expected for a brand-new
+            integration. Only the required `merchant_id` field is set —
+            the optional `position`/`region` fields are left to Google's
+            own default placement rather than guessed at, since their
+            exact accepted values weren't confirmed at the time this was
+            added; see Merchant Center's "Learn more about badge
+            integration" link if a specific corner/region is wanted
+            later. */}
+        <Script
+          id="merchantWidgetScript"
+          src="https://www.gstatic.com/shopping/merchant/merchantwidget.js"
+          strategy="afterInteractive"
+        />
+        <Script id="google-customer-reviews-badge-init" strategy="afterInteractive">
+          {`
+            var widgetScript = document.getElementById('merchantWidgetScript');
+            if (widgetScript) {
+              widgetScript.addEventListener('load', function () {
+                if (window.merchantwidget) {
+                  window.merchantwidget.start({
+                    merchant_id: ${GOOGLE_MERCHANT_ID}
+                  });
+                }
+              });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );
