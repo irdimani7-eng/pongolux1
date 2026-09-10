@@ -9,6 +9,25 @@ import { redirect } from "next/navigation";
 
 export type AuthActionState = { error: string | null } | null;
 
+const DEFAULT_REDIRECT = "/account";
+
+/** Only allows a same-origin, relative redirect target. `callbackUrl`
+ * arrives as a plain query param (e.g. /login?callbackUrl=/sell), so it's
+ * attacker-controlled input — without this check, someone could craft a
+ * link like /login?callbackUrl=https://evil.example and get a signed-in
+ * user redirected off PongoLux right after authenticating. */
+function safeRedirectTarget(target: FormDataEntryValue | null): string {
+  if (
+    typeof target !== "string" ||
+    target === "" ||
+    !target.startsWith("/") ||
+    target.startsWith("//")
+  ) {
+    return DEFAULT_REDIRECT;
+  }
+  return target;
+}
+
 export async function signup(
   _prevState: AuthActionState,
   formData: FormData
@@ -24,6 +43,7 @@ export async function signup(
   }
 
   const { name, email, password } = parsed.data;
+  const redirectTo = safeRedirectTarget(formData.get("callbackUrl"));
 
   const [existing] = await db
     .select()
@@ -45,8 +65,8 @@ export async function signup(
     passwordHash: await hashPassword(password),
   });
 
-  await signIn("credentials", { email, password, redirectTo: "/account" });
-  redirect("/account");
+  await signIn("credentials", { email, password, redirectTo });
+  redirect(redirectTo);
 }
 
 export async function login(
@@ -55,12 +75,13 @@ export async function login(
 ): Promise<AuthActionState> {
   const email = formData.get("email");
   const password = formData.get("password");
+  const redirectTo = safeRedirectTarget(formData.get("callbackUrl"));
 
   try {
     await signIn("credentials", {
       email,
       password,
-      redirectTo: "/account",
+      redirectTo,
     });
   } catch (err) {
     // next-auth throws a redirect internally on success; anything else here

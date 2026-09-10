@@ -5,9 +5,10 @@ import { HeroBanner } from "@/components/hero-banner";
 import { listProducts } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
 import { BRAND_STORIES } from "@/lib/brand-stories";
-import { Sparkles, Leaf } from "lucide-react";
+import { Sparkles, Leaf, Gem } from "lucide-react";
 import { TrustBar } from "@/components/trust-bar";
 import { FeaturedBrands } from "@/components/featured-brands";
+import { EntrupyBadge } from "@/components/entrupy-badge";
 
 export default async function HomePage() {
   const [allAvailable, mostWanted] = await Promise.all([
@@ -138,6 +139,15 @@ export default async function HomePage() {
                 </p>
               </div>
             </div>
+            <div className="mt-8 rounded-lg border border-border bg-surface p-5">
+              <EntrupyBadge variant="full" />
+            </div>
+            <Link
+              href="/authenticity"
+              className="mt-4 inline-block text-sm underline hover:text-accent"
+            >
+              More on how we authenticate
+            </Link>
           </div>
         </div>
       </section>
@@ -160,19 +170,58 @@ export default async function HomePage() {
           <div className="rounded-lg border border-border p-8">
             <Sparkles className="size-6" strokeWidth={1.5} />
             <h3 className="mt-4 font-(family-name:--font-display) text-xl">
-              Consignment, made simple
+              Sell your bag to us
             </h3>
             <p className="mt-3 text-sm text-muted-foreground">
-              Have a designer bag you&apos;re ready to let go of? We handle the
-              authentication, photography, and listing — you get paid once it
-              sells. No upfront fees.
+              Have a designer bag you&apos;re ready to let go of? Submit a
+              few details and photos and we&apos;ll send you a quote — a
+              Buy Now offer paid promptly on acceptance, or a consignment
+              listing that pays out 7–10 days after it sells. No upfront
+              fees, either way.
             </p>
             <Link
-              href="/contact"
+              href="/sell"
               className="mt-4 inline-block text-sm underline hover:text-accent"
             >
-              Get in touch about consigning
+              Start your submission
             </Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-border">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-6 py-16 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              <Gem className="size-4 text-accent" strokeWidth={1.5} />
+              A little something special
+            </div>
+            <h2 className="mt-2 font-(family-name:--font-display) text-2xl">
+              Tell us about your bag of dreams
+            </h2>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Every collector has one — the piece that got away, the color
+              that was discontinued, the style you&apos;ve quietly hoped
+              would resurface. Describe it, and we&apos;ll go looking on
+              your behalf across our network of trusted vendors — if we
+              find a match, we&apos;ll call or email you directly.
+            </p>
+            <Link
+              href="/dreams"
+              className="mt-6 inline-block rounded-full bg-foreground px-6 py-3 text-sm font-medium text-background hover:opacity-90"
+            >
+              Share your bag of dreams
+            </Link>
+          </div>
+          <div className="rounded-xl border border-border bg-muted/40 p-8 text-sm text-muted-foreground">
+            <p className="font-(family-name:--font-display) text-lg text-foreground">
+              A discontinued colorway. A style from a decade ago. A bag
+              you saw once and never forgot.
+            </p>
+            <p className="mt-3">
+              This is exactly the kind of hunt our vendor network is built
+              for — and exactly the kind of story we love being part of.
+            </p>
           </div>
         </div>
       </section>

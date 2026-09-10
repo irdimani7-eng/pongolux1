@@ -1,11 +1,14 @@
 "use client";
 
-import { useActionState } from "react";
+import { Suspense, useActionState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { signup } from "@/lib/actions/auth";
 
-export default function SignupPage() {
+function SignupForm() {
   const [state, formAction, pending] = useActionState(signup, null);
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") ?? "";
 
   return (
     <div className="mx-auto max-w-sm px-6 py-20">
@@ -13,6 +16,7 @@ export default function SignupPage() {
         Create an account
       </h1>
       <form action={formAction} className="mt-8 space-y-4">
+        <input type="hidden" name="callbackUrl" value={callbackUrl} />
         <div>
           <label htmlFor="name" className="text-sm">
             Name
@@ -60,10 +64,21 @@ export default function SignupPage() {
       </form>
       <p className="mt-6 text-sm text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="text-foreground hover:text-accent">
+        <Link
+          href={callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/login"}
+          className="text-foreground hover:text-accent"
+        >
           Sign in
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
   );
 }

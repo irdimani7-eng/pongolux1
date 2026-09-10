@@ -197,6 +197,56 @@ input from you:
   in-house expert, Entrupy, and Real Authentication as options — confirm
   which service(s) PongoLux actually uses.
 
+## Sell to Us, Bag of Dreams, and Entrupy certificates
+
+Three additions layered onto the Phase 1 MVP:
+
+- **`/sell`** — a signed-in-only page where a customer submits a handbag
+  they want to sell: contact/shipping info, item details, at least 6
+  photos, and an optional proof-of-authenticity file (all stored in Vercel
+  Blob, same as product photos). Submitting emails every detail to
+  `support@pongolux.com` — there's no dedicated admin queue yet, so
+  reviewing and quoting happens by email, and you update the submission's
+  status/quote directly in the database (see the comment at the top of
+  `migration-008-sell-submissions.sql` for the exact `UPDATE` statement).
+  Buy Now pays promptly once accepted; Consign pays 7–10 days after the
+  item sells — both explained on the page itself. The customer sees their
+  submission and its status on `/account`.
+- **`/dreams`** ("Tell us about your bag of dreams") — also signed-in
+  only. A customer describes a specific piece they're hunting for that
+  isn't in stock; it emails you the details so you can check it against
+  your vendor network and follow up directly (call or email, per their
+  preference). See `migration-009-dream-inquiries.sql` for the same
+  direct-database status workflow.
+- **Entrupy certificates, per item** — the admin product form has a new
+  "Entrupy certificate link" field (`/admin/products/new` and `/edit`).
+  Paste that item's own `cert.entrupy.com/...` link there and it appears
+  as a "View certificate" link on the product page. This links out to
+  Entrupy's own live page rather than embedding a static certificate
+  image, matching Entrupy's own guidance that only entrupy.com-hosted
+  certificates should be trusted. The general Entrupy logo/badge (in
+  `public/entrupy/`, provided directly by Entrupy) is used as a general
+  trust mark on the homepage, cart, trust bar, and the new `/authenticity`
+  page — no per-item claim implied, just "we use Entrupy."
+
+**Before deploying this batch**, run `migration-008-sell-submissions.sql`
+and `migration-009-dream-inquiries.sql` against production (Neon's SQL
+Editor, same as prior migrations) — the `/sell` and `/dreams` pages will
+otherwise error on submit (though the rest of the site keeps working; the
+account page sections for these fail closed to "nothing submitted yet"
+rather than a 500).
+
+No new environment variables are needed — sell/dream submissions reuse
+`PONGOLUX_BLOB_PUBLIC_FINAL_READ_WRITE_TOKEN` (photos) and `RESEND_API_KEY`
+(notification emails).
+
+**Not built in this batch, by design**: a dedicated `/admin` UI for
+reviewing sell submissions or dream inquiries and updating their status —
+that was explicitly scoped as "email-only for now." If this becomes a
+regular workflow, a proper admin queue (list + a form to set status/quote)
+would be a natural next step and would reuse the same patterns as
+`/admin/products` and `/admin/orders`.
+
 ## What's next (from the project roadmap)
 
 Built so far: browsing/filtering, product detail with authenticity badge,

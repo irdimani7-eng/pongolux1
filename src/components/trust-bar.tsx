@@ -1,13 +1,13 @@
-import { ShieldCheck, Gem, Truck, RotateCcw, Lock } from "lucide-react";
+import { Gem, Truck, RotateCcw, Lock } from "lucide-react";
 import type { ComponentType } from "react";
+import { EntrupyBadge } from "@/components/entrupy-badge";
 
 const TRUST_ITEMS: {
-  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
+  icon?: ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string;
   detail: string;
 }[] = [
   {
-    icon: ShieldCheck,
     title: "Authenticity Guaranteed",
     detail: "Every piece verified by Entrupy plus a hands-on expert review",
   },
@@ -51,9 +51,13 @@ export function TrustBar() {
         <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
           {TRUST_ITEMS.map(({ icon: Icon, title, detail }) => (
             <div key={title} className="flex flex-col items-center px-2">
-              <div className="flex size-14 items-center justify-center rounded-full border border-border bg-surface">
-                <Icon className="size-6 text-accent" strokeWidth={1.5} />
-              </div>
+              {Icon ? (
+                <div className="flex size-14 items-center justify-center rounded-full border border-border bg-surface">
+                  <Icon className="size-6 text-accent" strokeWidth={1.5} />
+                </div>
+              ) : (
+                <EntrupyBadge />
+              )}
               <h3 className="mt-4 text-sm font-medium uppercase tracking-wide">
                 {title}
               </h3>

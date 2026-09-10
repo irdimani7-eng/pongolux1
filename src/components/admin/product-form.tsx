@@ -43,6 +43,7 @@ type ProductFormProps = {
     status: string;
     authMethod: string;
     authenticatedBy: string;
+    certificateUrl: string;
   };
   existingImages?: ExistingImage[];
 };
@@ -324,6 +325,24 @@ export function ProductForm({
               }
               className={inputClass}
             />
+          </div>
+          <div className="sm:col-span-2">
+            <label htmlFor="certificateUrl" className={labelClass}>
+              Entrupy certificate link <span className="text-muted-foreground">(optional)</span>
+            </label>
+            <input
+              id="certificateUrl"
+              name="certificateUrl"
+              type="url"
+              placeholder="https://cert.entrupy.com/..."
+              defaultValue={initialValues?.certificateUrl}
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              This item&apos;s own live verification page from Entrupy —
+              shown as a &quot;View certificate&quot; link on the product
+              page. Leave blank if this piece doesn&apos;t have one yet.
+            </p>
           </div>
         </div>
       </div>

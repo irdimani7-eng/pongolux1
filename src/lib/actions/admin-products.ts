@@ -34,6 +34,7 @@ function fieldsFromFormData(formData: FormData) {
     isMostWanted: formData.get("isMostWanted") === "on",
     authMethod: formData.get("authMethod"),
     authenticatedBy: formData.get("authenticatedBy"),
+    certificateUrl: formData.get("certificateUrl"),
   };
 }
 
@@ -169,6 +170,7 @@ export async function createProductAction(
     productId,
     method: data.authMethod,
     authenticatedBy: data.authenticatedBy,
+    certificateUrl: data.certificateUrl,
   });
 
   revalidatePath("/shop");
@@ -272,13 +274,18 @@ export async function updateProductAction(
   if (existingAuth) {
     await db
       .update(authenticationRecords)
-      .set({ method: data.authMethod, authenticatedBy: data.authenticatedBy })
+      .set({
+        method: data.authMethod,
+        authenticatedBy: data.authenticatedBy,
+        certificateUrl: data.certificateUrl,
+      })
       .where(eq(authenticationRecords.productId, productId));
   } else {
     await db.insert(authenticationRecords).values({
       productId,
       method: data.authMethod,
       authenticatedBy: data.authenticatedBy,
+      certificateUrl: data.certificateUrl,
     });
   }
 

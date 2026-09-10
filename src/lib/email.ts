@@ -303,3 +303,166 @@ export async function sendOrderShippedEmail(params: {
   }
   console.log("Order shipped email sent, Resend id:", data?.id);
 }
+
+/** Notifies Irdi of a new "Sell to us" submission. There's no dedicated
+ * admin queue for these yet (see migration-008-sell-submissions.sql) —
+ * this email IS the review workflow for now, so it includes every field
+ * she'd need to make a call on the item, plus thumbnails of the photos. */
+export async function sendSellSubmissionEmail(params: {
+  submissionId: string;
+  sellerName: string;
+  sellerEmail: string;
+  sellerPhone: string;
+  address: string;
+  productName: string;
+  brand: string;
+  yearOfPurchase: string | null;
+  condition: string;
+  size: string | null;
+  proofOfAuthenticityUrl: string | null;
+  notes: string | null;
+  photoUrls: string[];
+}) {
+  if (!resend) {
+    console.warn(
+      "RESEND_API_KEY not set — skipping sell submission email for",
+      params.submissionId
+    );
+    return;
+  }
+
+  const photosHtml = params.photoUrls.length
+    ? `<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
+        ${params.photoUrls
+          .map(
+            (url) =>
+              `<a href="${url}"><img src="${url}" width="90" height="90" style="border-radius:6px;object-fit:cover;display:block;" /></a>`
+          )
+          .join("")}
+      </div>`
+    : `<p style="color:#b3261e;">No photos were attached — this shouldn't happen, follow up with the seller.</p>`;
+
+  const detailRow = (label: string, value: string) => `
+    <tr>
+      <td style="padding:4px 12px 4px 0;color:#78716c;white-space:nowrap;vertical-align:top;">${label}</td>
+      <td style="padding:4px 0;">${value}</td>
+    </tr>`;
+
+  const body = `
+    <h1 style="margin:0 0 4px;font-size:20px;">New "Sell to us" submission</h1>
+    <p style="margin:0 0 20px;color:#57534e;">
+      From ${params.sellerName} (${params.sellerEmail})
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
+      ${detailRow("Product", `${params.brand} — ${params.productName}`)}
+      ${detailRow("Condition", params.condition)}
+      ${params.size ? detailRow("Size", params.size) : ""}
+      ${params.yearOfPurchase ? detailRow("Year purchased", params.yearOfPurchase) : ""}
+      ${
+        params.proofOfAuthenticityUrl
+          ? detailRow(
+              "Proof of authenticity",
+              `<a href="${params.proofOfAuthenticityUrl}">${params.proofOfAuthenticityUrl}</a>`
+            )
+          : ""
+      }
+      ${params.notes ? detailRow("Seller's notes", params.notes) : ""}
+      ${detailRow("Phone", params.sellerPhone)}
+      ${detailRow("Address", params.address)}
+    </table>
+    <h2 style="margin:20px 0 0;font-size:14px;">Photos</h2>
+    ${photosHtml}
+    <p style="margin:20px 0 0;color:#78716c;font-size:12px;">
+      Submission ID: ${params.submissionId}. To respond, update this row in
+      the database (status, quote_type, quote_amount_cents, quote_notes) —
+      see the comment at the top of migration-008-sell-submissions.sql.
+    </p>
+  `;
+
+  const { data, error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
+    to: "support@pongolux.com",
+    replyTo: params.sellerEmail,
+    subject: `[Sell to us] ${params.brand} ${params.productName} — from ${params.sellerName}`,
+    html: emailShell(body),
+  });
+
+  if (error) {
+    console.error("Resend rejected sell submission email:", error);
+    throw new Error(`Resend error (${error.name}): ${error.message}`);
+  }
+  console.log("Sell submission email sent, Resend id:", data?.id);
+}
+
+/** Notifies Irdi of a new "Bag of Dreams" inquiry, so she can check it
+ * against her vendor network and reach out to the customer directly (by
+ * phone or email, per their stated preference). */
+export async function sendDreamInquiryEmail(params: {
+  inquiryId: string;
+  customerName: string;
+  customerEmail: string;
+  brand: string;
+  modelOrStyle: string;
+  colorPreference: string | null;
+  sizePreference: string | null;
+  budgetRange: string | null;
+  occasion: string | null;
+  details: string | null;
+  contactPreference: string;
+}) {
+  if (!resend) {
+    console.warn(
+      "RESEND_API_KEY not set — skipping dream inquiry email for",
+      params.inquiryId
+    );
+    return;
+  }
+
+  const detailRow = (label: string, value: string) => `
+    <tr>
+      <td style="padding:4px 12px 4px 0;color:#78716c;white-space:nowrap;vertical-align:top;">${label}</td>
+      <td style="padding:4px 0;">${value}</td>
+    </tr>`;
+
+  const body = `
+    <h1 style="margin:0 0 4px;font-size:20px;">A new bag of dreams ✨</h1>
+    <p style="margin:0 0 20px;color:#57534e;">
+      From ${params.customerName} (${params.customerEmail})
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
+      ${detailRow("Looking for", `${params.brand} — ${params.modelOrStyle}`)}
+      ${params.colorPreference ? detailRow("Color", params.colorPreference) : ""}
+      ${params.sizePreference ? detailRow("Size", params.sizePreference) : ""}
+      ${params.budgetRange ? detailRow("Budget", params.budgetRange) : ""}
+      ${params.occasion ? detailRow("Occasion", params.occasion) : ""}
+      ${params.details ? detailRow("Their story", params.details) : ""}
+      ${detailRow(
+        "Prefers to be contacted by",
+        params.contactPreference === "call"
+          ? "Phone call"
+          : params.contactPreference === "email"
+            ? "Email"
+            : "Either"
+      )}
+    </table>
+    <p style="margin:20px 0 0;color:#78716c;font-size:12px;">
+      Inquiry ID: ${params.inquiryId}. Update its status directly in the
+      database as you work it — see the comment at the top of
+      migration-009-dream-inquiries.sql.
+    </p>
+  `;
+
+  const { data, error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
+    to: "support@pongolux.com",
+    replyTo: params.customerEmail,
+    subject: `[Bag of Dreams] ${params.brand} ${params.modelOrStyle} — from ${params.customerName}`,
+    html: emailShell(body),
+  });
+
+  if (error) {
+    console.error("Resend rejected dream inquiry email:", error);
+    throw new Error(`Resend error (${error.name}): ${error.message}`);
+  }
+  console.log("Dream inquiry email sent, Resend id:", data?.id);
+}

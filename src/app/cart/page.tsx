@@ -8,6 +8,7 @@ import { useCartHydrated } from "@/lib/use-hydrated";
 import { formatPrice, SHIPPING_INSURANCE_CENTS } from "@/lib/format";
 import { releaseProductAction } from "@/lib/actions/cart";
 import { createCheckoutSession } from "@/lib/actions/checkout";
+import { EntrupyBadge } from "@/components/entrupy-badge";
 
 export default function CartPage() {
   const hydrated = useCartHydrated();
@@ -138,6 +139,14 @@ export default function CartPage() {
       >
         {isPending ? "Redirecting to checkout…" : "Proceed to checkout"}
       </button>
+
+      <div className="mt-6 flex items-center justify-center gap-3 border-t border-border pt-6">
+        <EntrupyBadge />
+        <p className="text-xs text-muted-foreground">
+          Every piece in your bag has been scanned and verified by Entrupy,
+          plus a hands-on expert review.
+        </p>
+      </div>
     </div>
   );
 }

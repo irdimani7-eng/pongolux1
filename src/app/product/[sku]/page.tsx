@@ -8,6 +8,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 import { WishlistButton } from "@/components/wishlist-button";
 import { RecentlyViewedTracker } from "@/components/recently-viewed-tracker";
 import { RecentlyViewed } from "@/components/recently-viewed";
+import { EntrupyBadge, EntrupyCertificateLink } from "@/components/entrupy-badge";
 import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -155,7 +156,11 @@ export default async function ProductPage({
 
           {product.authentication && (
             <div className="mt-6 flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-4 text-sm">
-              <ShieldCheck className="mt-0.5 size-5 shrink-0 text-accent" strokeWidth={1.5} />
+              {product.authentication.method === "entrupy" ? (
+                <EntrupyBadge className="mt-0.5 shrink-0" />
+              ) : (
+                <ShieldCheck className="mt-0.5 size-5 shrink-0 text-accent" strokeWidth={1.5} />
+              )}
               <div>
                 <p className="font-medium">Authenticity verified</p>
                 <p className="mt-0.5 text-muted-foreground">
@@ -166,6 +171,12 @@ export default async function ProductPage({
                         product.authentication.method
                       } (${product.authentication.authenticatedBy}).`}
                 </p>
+                {product.authentication.certificateUrl && (
+                  <EntrupyCertificateLink
+                    url={product.authentication.certificateUrl}
+                    className="mt-2"
+                  />
+                )}
               </div>
             </div>
           )}

@@ -271,6 +271,8 @@ export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),
   addresses: many(addresses),
   wishlistItems: many(wishlistItems),
+  sellSubmissions: many(sellSubmissions),
+  dreamInquiries: many(dreamInquiries),
 }));
 
 export const productsRelations = relations(products, ({ many, one }) => ({
@@ -358,4 +360,157 @@ export const wishlistItemsRelations = relations(wishlistItems, ({ one }) => ({
     fields: [wishlistItems.productId],
     references: [products.id],
   }),
+}));
+
+// ---------------------------------------------------------------------------
+// Sell to us — a signed-in customer submits a handbag they'd like to sell.
+// Irdi reviews new submissions by email (no dedicated admin queue yet — see
+// migration-008-sell-submissions.sql) and, if interested, sends a quote for
+// either an outright "Buy Now" purchase or a "Consign" listing. Status and
+// the quote fields are updated directly in the database until an admin UI
+// exists for this.
+// ---------------------------------------------------------------------------
+
+export const sellSubmissions = pgTable(
+  "sell_submission",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // Contact/shipping details for this specific submission — kept
+    // independent of any saved account address, since a seller may want
+    // pickup/return shipping to go somewhere else.
+    contactName: text("contact_name").notNull(),
+    contactEmail: text("contact_email").notNull(),
+    contactPhone: text("contact_phone").notNull(),
+    addressLine1: text("address_line1").notNull(),
+    addressLine2: text("address_line2"),
+    city: text("city").notNull(),
+    state: text("state").notNull(),
+    postalCode: text("postal_code").notNull(),
+    country: text("country").notNull().default("US"),
+    // Item details
+    productName: text("product_name").notNull(),
+    brand: text("brand").notNull(),
+    yearOfPurchase: text("year_of_purchase"),
+    condition: text("condition", {
+      enum: ["new", "like_new", "excellent", "very_good", "good", "fair"],
+    }).notNull(),
+    size: text("size"),
+    proofOfAuthenticityUrl: text("proof_of_authenticity_url"),
+    notes: text("notes"),
+    status: text("status", {
+      enum: [
+        "submitted",
+        "under_review",
+        "quote_sent",
+        "accepted",
+        "declined",
+        "paid",
+        "withdrawn",
+      ],
+    })
+      .notNull()
+      .default("submitted"),
+    // Buy Now pays promptly on acceptance; Consign pays 7–10 days after the
+    // item sells — see the copy on /sell and /account for how this is
+    // explained to the seller.
+    quoteType: text("quote_type", { enum: ["buy_now", "consign"] }),
+    quoteAmountCents: integer("quote_amount_cents"),
+    quoteNotes: text("quote_notes"),
+    // Internal only — never shown to the customer.
+    adminNotes: text("admin_notes"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("sell_submission_user_id_idx").on(table.userId)]
+);
+
+export const sellSubmissionPhotos = pgTable(
+  "sell_submission_photo",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    sellSubmissionId: text("sell_submission_id")
+      .notNull()
+      .references(() => sellSubmissions.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    position: integer("position").notNull().default(0),
+  },
+  (table) => [
+    index("sell_submission_photo_submission_id_idx").on(
+      table.sellSubmissionId
+    ),
+  ]
+);
+
+export const sellSubmissionsRelations = relations(
+  sellSubmissions,
+  ({ one, many }) => ({
+    user: one(users, {
+      fields: [sellSubmissions.userId],
+      references: [users.id],
+    }),
+    photos: many(sellSubmissionPhotos),
+  })
+);
+
+export const sellSubmissionPhotosRelations = relations(
+  sellSubmissionPhotos,
+  ({ one }) => ({
+    sellSubmission: one(sellSubmissions, {
+      fields: [sellSubmissionPhotos.sellSubmissionId],
+      references: [sellSubmissions.id],
+    }),
+  })
+);
+
+// ---------------------------------------------------------------------------
+// Bag of Dreams — a signed-in customer tells us about a specific piece
+// they're hunting for that isn't currently in stock. We check it against
+// our vendor network and reach out personally (call or email) if we find a
+// match.
+// ---------------------------------------------------------------------------
+
+export const dreamInquiries = pgTable(
+  "dream_inquiry",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    brand: text("brand").notNull(),
+    modelOrStyle: text("model_or_style").notNull(),
+    colorPreference: text("color_preference"),
+    sizePreference: text("size_preference"),
+    budgetRange: text("budget_range"),
+    // Optional — "looking for this in time for our anniversary in June" —
+    // lets us prioritize outreach and personalize it when we follow up.
+    occasion: text("occasion"),
+    details: text("details"),
+    contactPreference: text("contact_preference", {
+      enum: ["call", "email", "either"],
+    })
+      .notNull()
+      .default("either"),
+    status: text("status", {
+      enum: ["submitted", "searching", "matched", "closed"],
+    })
+      .notNull()
+      .default("submitted"),
+    adminNotes: text("admin_notes"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [index("dream_inquiry_user_id_idx").on(table.userId)]
+);
+
+export const dreamInquiriesRelations = relations(dreamInquiries, ({ one }) => ({
+  user: one(users, { fields: [dreamInquiries.userId], references: [users.id] }),
 }));

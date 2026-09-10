@@ -30,6 +30,9 @@ export async function SiteHeader() {
           >
             Most Wanted
           </Link>
+          <Link href="/sell" className="hover:text-accent transition-colors">
+            Sell to Us
+          </Link>
           <Link href="/about" className="hover:text-accent transition-colors">
             About
           </Link>

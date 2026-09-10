@@ -48,6 +48,7 @@ export default async function EditProductPage({
           authenticatedBy:
             product.authentication?.authenticatedBy ??
             "PongoLux Authentication Team",
+          certificateUrl: product.authentication?.certificateUrl ?? "",
         }}
         existingImages={product.images.map((img) => ({
           id: img.id,

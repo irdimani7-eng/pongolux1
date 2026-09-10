@@ -87,13 +87,23 @@ export function SiteFooter() {
               </Link>
             </li>
             <li>
-              <Link href="/#authentication" className="hover:text-accent">
-                Authentication process
+              <Link href="/authenticity" className="hover:text-accent">
+                Authenticity
               </Link>
             </li>
             <li>
               <Link href="/shipping-returns" className="hover:text-accent">
                 Shipping &amp; returns
+              </Link>
+            </li>
+            <li>
+              <Link href="/sell" className="hover:text-accent">
+                Sell to us
+              </Link>
+            </li>
+            <li>
+              <Link href="/dreams" className="hover:text-accent">
+                Bag of dreams
               </Link>
             </li>
           </ul>

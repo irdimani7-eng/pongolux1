@@ -96,6 +96,16 @@ export const ProductFormSchema = z.object({
   isMostWanted: z.boolean().default(false),
   authMethod: z.enum(AUTH_METHODS),
   authenticatedBy: z.string().trim().min(1, "Enter who authenticated this piece."),
+  // Per-item link to that piece's own live cert.entrupy.com verification
+  // page. Optional — older listings won't have one yet.
+  certificateUrl: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v))
+    .refine(
+      (v) => v === null || /^https:\/\/(www\.)?(cert\.)?entrupy\.com\//.test(v),
+      "Certificate link must be an entrupy.com URL."
+    ),
 });
 
 export const CONTACT_ATTENTION_OPTIONS = [
@@ -125,4 +135,100 @@ export const ShippingAddressSchema = z.object({
   postalCode: z.string().trim().min(3, "Enter a postal code."),
   country: z.string().trim().default("US"),
   phone: z.string().trim().optional(),
+});
+
+// ---------------------------------------------------------------------------
+// Sell to us
+// ---------------------------------------------------------------------------
+
+// Matches the enum on the `sell_submission` table in src/db/schema.ts.
+export const SELL_STATUSES = [
+  "submitted",
+  "under_review",
+  "quote_sent",
+  "accepted",
+  "declined",
+  "paid",
+  "withdrawn",
+] as const;
+
+export const QUOTE_TYPES = ["buy_now", "consign"] as const;
+
+export const SellSubmissionSchema = z.object({
+  contactName: z.string().trim().min(2, "Enter your full name."),
+  contactEmail: z.email("Please enter a valid email."),
+  contactPhone: z.string().trim().min(7, "Enter a phone number we can reach you at."),
+  addressLine1: z.string().trim().min(3, "Enter a street address."),
+  addressLine2: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  city: z.string().trim().min(1, "Enter a city."),
+  state: z.string().trim().min(2, "Enter a state."),
+  postalCode: z.string().trim().min(3, "Enter a postal code."),
+  country: z.string().trim().min(1).default("US"),
+  productName: z.string().trim().min(1, "Enter the product name."),
+  brand: z.string().trim().min(1, "Enter the brand."),
+  yearOfPurchase: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  condition: z.enum(PRODUCT_CONDITIONS),
+  size: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  proofOfAuthenticityUrl: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  notes: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+});
+
+// Enforced separately from the schema above (rather than as a zod array
+// length rule) since photos arrive as raw File entries from FormData —
+// see submitSellSubmissionAction in src/lib/actions/sell.ts.
+export const SELL_SUBMISSION_MIN_PHOTOS = 6;
+
+// ---------------------------------------------------------------------------
+// Bag of Dreams
+// ---------------------------------------------------------------------------
+
+// Matches the enum on the `dream_inquiry` table in src/db/schema.ts.
+export const DREAM_STATUSES = [
+  "submitted",
+  "searching",
+  "matched",
+  "closed",
+] as const;
+
+export const CONTACT_PREFERENCES = ["call", "email", "either"] as const;
+
+export const DreamInquirySchema = z.object({
+  brand: z.string().trim().min(1, "Tell us the brand you're dreaming of."),
+  modelOrStyle: z.string().trim().min(1, "Tell us the model or style."),
+  colorPreference: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  sizePreference: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  budgetRange: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  occasion: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  details: z
+    .string()
+    .trim()
+    .transform((v) => (v === "" ? null : v)),
+  contactPreference: z.enum(CONTACT_PREFERENCES).default("either"),
 });

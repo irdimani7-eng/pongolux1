@@ -45,3 +45,31 @@ export const AUTH_METHOD_LABELS: Record<string, string> = {
   real_authentication: "Real Authentication",
   other: "Third-party authentication service",
 };
+
+export const SELL_STATUS_LABELS: Record<string, string> = {
+  submitted: "Submitted — awaiting review",
+  under_review: "Under review",
+  quote_sent: "Quote sent",
+  accepted: "Quote accepted",
+  declined: "Declined",
+  paid: "Paid",
+  withdrawn: "Withdrawn",
+};
+
+export const QUOTE_TYPE_LABELS: Record<string, string> = {
+  buy_now: "Buy Now",
+  consign: "Consign with us",
+};
+
+export const DREAM_STATUS_LABELS: Record<string, string> = {
+  submitted: "Submitted — we're on it",
+  searching: "Searching our vendor network",
+  matched: "Match found — we'll be in touch",
+  closed: "Closed",
+};
+
+export const CONTACT_PREFERENCE_LABELS: Record<string, string> = {
+  call: "Call me",
+  email: "Email me",
+  either: "Either is fine",
+};
