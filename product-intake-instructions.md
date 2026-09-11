@@ -31,6 +31,31 @@ The command-line `npm run db:import` script (below) still exists and still
 works exactly as before, for anyone who prefers a local terminal — the two
 are interchangeable, same CSV, same folder convention.
 
+## Naming your photos (this decides their order on the page)
+
+This is the part that's easy to miss: **the order photos appear in on the
+product page comes from each photo's filename, not from the order you
+happened to select or drag them in.** Whichever photo's filename sorts
+first becomes the big cover photo.
+
+- To make a specific photo the cover shot, either give it no number at all
+  (e.g. `cover.jpg`, `main.jpg`) or name it `1.jpg`.
+- Name the rest in the order you want them to appear: `2.jpg`, `3.jpg`,
+  `4.jpg`, and so on. (`10.jpg` correctly sorts after `9.jpg`, not right
+  after `1.jpg`.)
+- **If you leave your phone or camera's original filenames as-is** (like
+  `IMG_1234.jpg` or a timestamp), they still get sorted — by whatever
+  number the camera assigned, which is usually just the order the photos
+  were taken in. If the shot you want as the cover photo wasn't the first
+  one you took, it will land wherever its original number puts it (often
+  last, if it was the last photo you took of that item) — not first, even
+  though you picked it as "the main one." Rename that one file and you're
+  fine; you don't need to renumber the whole folder.
+
+This applies the same way whether you're using the `/admin/products/bulk`
+tool or the command-line `npm run db:import` script — both order photos by
+filename, identically.
+
 ## The CSV columns
 
 - **sku** — your own inventory SKU for this item (e.g. `PL-0001`). This is

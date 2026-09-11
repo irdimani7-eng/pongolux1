@@ -238,6 +238,16 @@ export function BulkImportForm() {
             layout you&apos;d zip up for a manual send). {photoFolders.size > 0 &&
               `${photoFolders.size} folder(s) found.`}
           </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Photo order on the page follows each file&apos;s name, not the
+            order you selected them in: name the cover shot without a
+            number (e.g. <code>cover.jpg</code>) or as <code>1.jpg</code>,
+            then the rest <code>2.jpg</code>, <code>3.jpg</code>, etc. A
+            camera&apos;s default filename (like <code>IMG_1234.jpg</code>)
+            still sorts by that number, so if you didn&apos;t take the cover
+            shot first, rename it — otherwise it can end up last instead of
+            first.
+          </p>
         </div>
       </div>
 
