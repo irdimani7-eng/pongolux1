@@ -1,6 +1,6 @@
-sku,brand,model,title,description,category,color,condition,price_usd,is_consignment,photo_folder_name
-PL-0001,Chanel,Classic Flap Medium,Classic Flap Medium in Black Caviar,"Timeless black caviar leather classic flap with gold-tone hardware. Gently carried, stored in dust bag between uses.",handbag,Black,excellent,7499,no,PL-0001
-,,,,,,,,,,
-,,,,,,,,,,
-,,,,,,,,,,
-,,,,,,,,,,
+sku,brand,model,title,description,condition_notes,size,category,color,condition,price_usd,compare_at_price_usd,is_consignment,photo_folder_name
+PL-0001,Chanel,Classic Flap Medium,Classic Flap Medium in Black Caviar,"Timeless black caviar leather classic flap with gold-tone hardware. Gently carried, stored in dust bag between uses.","Light corner wear; faint scuff on the back panel.","W 25.5 cm x H 15.5 cm x D 7 cm, 24"" chain drop",handbag,Black,excellent,7499,,no,PL-0001
+,,,,,,,,,,,,,
+,,,,,,,,,,,,,
+,,,,,,,,,,,,,
+,,,,,,,,,,,,,

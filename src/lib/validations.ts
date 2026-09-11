@@ -122,10 +122,14 @@ export const BulkImportRowSchema = z.object({
   model: ProductFormSchema.shape.model,
   title: ProductFormSchema.shape.title,
   description: ProductFormSchema.shape.description,
+  // All three optional, same as on the single-item form — blank stays null.
+  conditionNotes: ProductFormSchema.shape.conditionNotes,
+  dimensions: ProductFormSchema.shape.dimensions,
   category: ProductFormSchema.shape.category,
   color: ProductFormSchema.shape.color,
   condition: ProductFormSchema.shape.condition,
   priceUsd: ProductFormSchema.shape.priceUsd,
+  compareAtPriceUsd: ProductFormSchema.shape.compareAtPriceUsd,
   isConsignment: z.boolean().default(false),
 });
 

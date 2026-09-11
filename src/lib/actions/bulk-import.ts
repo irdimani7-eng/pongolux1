@@ -42,10 +42,13 @@ export async function bulkImportRowAction(
     model: formData.get("model"),
     title: formData.get("title"),
     description: formData.get("description"),
+    conditionNotes: formData.get("conditionNotes"),
+    dimensions: formData.get("dimensions"),
     category: formData.get("category"),
     color: formData.get("color"),
     condition: formData.get("condition"),
     priceUsd: formData.get("priceUsd"),
+    compareAtPriceUsd: formData.get("compareAtPriceUsd"),
     isConsignment: formData.get("isConsignment") === "yes",
   });
   if (!parsed.success) {
@@ -77,6 +80,8 @@ export async function bulkImportRowAction(
     .limit(1);
 
   const priceCents = Math.round(data.priceUsd * 100);
+  const compareAtPriceCents =
+    data.compareAtPriceUsd == null ? null : Math.round(data.compareAtPriceUsd * 100);
 
   if (existing) {
     const productId = existing.id;
@@ -89,10 +94,13 @@ export async function bulkImportRowAction(
           model: data.model,
           title: data.title,
           description: data.description,
+          conditionNotes: data.conditionNotes,
+          dimensions: data.dimensions,
           category: data.category,
           color: data.color,
           condition: data.condition,
           priceCents,
+          compareAtPriceCents,
           isConsignment: data.isConsignment,
           updatedAt: new Date(),
           // status is deliberately not touched here — a re-import must
@@ -168,10 +176,13 @@ export async function bulkImportRowAction(
         model: data.model,
         title: data.title,
         description: data.description,
+        conditionNotes: data.conditionNotes,
+        dimensions: data.dimensions,
         category: data.category,
         color: data.color,
         condition: data.condition,
         priceCents,
+        compareAtPriceCents,
         status: "available",
         isConsignment: data.isConsignment,
       })

@@ -46,6 +46,13 @@ are interchangeable, same CSV, same folder convention.
 - **description** — a few sentences: material, hardware, notable wear,
   what's included (dust bag, box, cards). Your Poshmark description is a
   great starting point — paste it in and I'll clean up the formatting.
+- **condition_notes** *(optional)* — shown as its own "Condition" section on
+  the product page, separate from the main description — e.g. `Light corner
+  wear; faint scuff on the back panel.` Leave blank to omit that section
+  entirely.
+- **size** *(optional)* — dimensions, shown as its own "Size" section on the
+  product page — e.g. `W 25.5 cm x H 15.5 cm x D 7 cm, 24" chain drop`.
+  Leave blank to omit.
 - **category** (Type) — one of: `handbag`, `wallet`, `accessory`, `other`.
 - **color** — the primary color, e.g. `Black`, `Tan`, `Etoupe`. Try to reuse
   the exact same spelling/capitalization across items of the same color
@@ -56,6 +63,9 @@ are interchangeable, same CSV, same folder convention.
   `good`, `fair`.
 - **price_usd** — whole dollars, no `$` or commas (e.g. `7499` for
   $7,499.00).
+- **compare_at_price_usd** *(optional)* — set this higher than `price_usd`
+  to show a strikethrough price and list the item under New Price Drops on
+  the shop page. Leave blank if it's not on sale.
 - **is_consignment** — `yes` if you're selling this on behalf of someone
   else, otherwise `no`.
 - **photo_folder_name** — leave this matching the `sku` column; see below.

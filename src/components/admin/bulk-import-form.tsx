@@ -29,10 +29,13 @@ const CSV_COLUMNS = [
   "model",
   "title",
   "description",
+  "condition_notes",
+  "size",
   "category",
   "color",
   "condition",
   "price_usd",
+  "compare_at_price_usd",
   "is_consignment",
   "photo_folder_name",
 ] as const;
@@ -141,10 +144,13 @@ export function BulkImportForm() {
       formData.set("model", row.model ?? "");
       formData.set("title", row.title ?? "");
       formData.set("description", row.description ?? "");
+      formData.set("conditionNotes", row.condition_notes ?? "");
+      formData.set("dimensions", row.size ?? "");
       formData.set("category", row.category ?? "handbag");
       formData.set("color", row.color ?? "");
       formData.set("condition", condition);
       formData.set("priceUsd", priceUsd);
+      formData.set("compareAtPriceUsd", (row.compare_at_price_usd ?? "").trim());
       formData.set("isConsignment", (row.is_consignment ?? "").toLowerCase() === "yes" ? "yes" : "no");
       for (const file of files) formData.append("images", file);
 

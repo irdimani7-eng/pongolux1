@@ -47,10 +47,13 @@ type Row = Record<
   | "model"
   | "title"
   | "description"
+  | "condition_notes"
+  | "size"
   | "category"
   | "color"
   | "condition"
   | "price_usd"
+  | "compare_at_price_usd"
   | "is_consignment"
   | "photo_folder_name",
   string
@@ -143,6 +146,23 @@ async function main() {
       continue;
     }
 
+    // Both optional — blank means "not on sale" / "no notes provided", same
+    // as the single-item admin form and the /admin/products/bulk tool.
+    const conditionNotes = row.condition_notes?.trim() || null;
+    const dimensions = row.size?.trim() || null;
+    const compareAtPriceUsd = row.compare_at_price_usd?.trim();
+    let compareAtPriceCents: number | null = null;
+    if (compareAtPriceUsd) {
+      const parsedCompareCents = Math.round(Number(compareAtPriceUsd) * 100);
+      if (Number.isFinite(parsedCompareCents) && parsedCompareCents > 0) {
+        compareAtPriceCents = parsedCompareCents;
+      } else {
+        console.log(
+          `  → invalid compare_at_price_usd "${compareAtPriceUsd}", leaving blank`
+        );
+      }
+    }
+
     const [existing] = await db
       .select({ id: products.id })
       .from(products)
@@ -157,10 +177,13 @@ async function main() {
           model: row.model,
           title: row.title,
           description: row.description,
+          conditionNotes,
+          dimensions,
           category,
           color: row.color,
           condition: condition as (typeof CONDITIONS)[number],
           priceCents,
+          compareAtPriceCents,
           isConsignment: row.is_consignment?.toLowerCase() === "yes",
           updatedAt: new Date(),
         })
@@ -176,10 +199,13 @@ async function main() {
           model: row.model,
           title: row.title,
           description: row.description,
+          conditionNotes,
+          dimensions,
           category,
           color: row.color,
           condition: condition as (typeof CONDITIONS)[number],
           priceCents,
+          compareAtPriceCents,
           status: "available",
           isConsignment: row.is_consignment?.toLowerCase() === "yes",
         })
