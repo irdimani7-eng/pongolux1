@@ -1,8 +1,35 @@
 # Sending real product listings
 
 Fill out `product-intake-template.csv` — one row per item — and send photos.
-Here's exactly how each column maps, plus the easiest way to get photos to
-me.
+Here's exactly how each column maps, plus the easiest way to get photos in.
+
+## New: you can do this yourself now, no need to send anything over chat
+
+As of 2026-09-11, there's a **Bulk import** page at `/admin/products/bulk`
+(also linked from the "Bulk import" button on `/admin/products`) that does
+exactly what used to require sending a CSV + a zip of photos here for me to
+run `npm run db:import` on. Same CSV format, same "one folder per SKU"
+photo layout described below — just done entirely in your browser:
+
+1. Fill out `product-intake-template.csv` as always.
+2. Organize your photos the same way you always have — one folder per item,
+   named like that item's SKU.
+3. Open `/admin/products/bulk`, select the CSV file, then select the parent
+   folder containing all your per-SKU photo folders (your browser will ask
+   to confirm access to that folder — that's normal for a folder picker).
+4. Review the preview table — it shows how many photos matched each row and
+   flags anything missing a price or condition — then click "Start import."
+   Each row uploads and publishes one at a time, with its own status shown
+   live, so a problem with one item never affects the others.
+
+Re-running the same CSV is always safe: an existing SKU updates that
+listing in place (photos fully replaced) instead of creating a duplicate —
+so if a few rows get skipped (missing data, no matching folder), just fix
+those specific rows and run the import again.
+
+The command-line `npm run db:import` script (below) still exists and still
+works exactly as before, for anyone who prefers a local terminal — the two
+are interchangeable, same CSV, same folder convention.
 
 ## The CSV columns
 

@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/admin";
 import { getNextImagePosition } from "@/lib/admin-data";
+import { isUniqueViolation } from "@/lib/db-errors";
 import {
   ProductFormSchema,
   PRODUCT_STATUSES,
@@ -42,8 +43,12 @@ function fieldsFromFormData(formData: FormData) {
  * storage, returning their public URLs in the order they were selected.
  * Vercel's serverless functions have a read-only filesystem, so listing
  * photos can't just write into /public the way the CLI import script does
- * for the initial catalog — this is the runtime-safe equivalent. */
-async function uploadImages(sku: string, formData: FormData) {
+ * for the initial catalog — this is the runtime-safe equivalent.
+ *
+ * Exported so src/lib/actions/bulk-import.ts can reuse the exact same
+ * upload path (same Blob token, same naming) for the admin "Bulk import"
+ * tool, instead of a second copy of this logic drifting out of sync. */
+export async function uploadImages(sku: string, formData: FormData) {
   const files = formData
     .getAll("images")
     .filter((f): f is File => f instanceof File && f.size > 0);
@@ -76,14 +81,6 @@ async function uploadImages(sku: string, formData: FormData) {
   return urls;
 }
 
-function isUniqueViolation(err: unknown, column: "sku" | "title") {
-  return (
-    err instanceof Error &&
-    "code" in err &&
-    (err as { code?: string }).code === "23505" &&
-    err.message.includes(column)
-  );
-}
 
 export async function createProductAction(
   _prevState: ProductActionState,

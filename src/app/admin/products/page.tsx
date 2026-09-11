@@ -20,12 +20,20 @@ export default async function AdminProductsPage() {
         <h1 className="font-(family-name:--font-display) text-3xl">
           Products
         </h1>
-        <Link
-          href="/admin/products/new"
-          className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background hover:opacity-90"
-        >
-          + New listing
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/admin/products/bulk"
+            className="rounded-full border border-border px-5 py-2.5 text-sm font-medium hover:bg-muted"
+          >
+            Bulk import
+          </Link>
+          <Link
+            href="/admin/products/new"
+            className="rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background hover:opacity-90"
+          >
+            + New listing
+          </Link>
+        </div>
       </div>
 
       <div className="mt-8 overflow-x-auto">

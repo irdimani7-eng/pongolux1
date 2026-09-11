@@ -18,6 +18,15 @@
  * fill in those two columns and re-run to actually publish the listing.
  * Re-running is always safe: an existing SKU is updated in place rather than
  * duplicated.
+ *
+ * This is the command-line sibling of the "Bulk import" page in /admin
+ * (src/components/admin/bulk-import-form.tsx) — same CSV format, same
+ * folder-per-SKU photo convention, and both share the parsing/sorting logic
+ * in src/lib/csv.ts and src/lib/sort-image-files.ts so the two never drift
+ * apart on how a row or a filename gets read. This script is still the
+ * right tool when Irdi already has everything sitting in local folders and
+ * wants a single command; the admin page is the right tool when working
+ * from the browser without a local Node setup.
  */
 import {
   readFileSync,
@@ -29,6 +38,8 @@ import path from "node:path";
 import { eq } from "drizzle-orm";
 import { db } from "../src/db";
 import { products, productImages, authenticationRecords } from "../src/db/schema";
+import { parseCsv } from "../src/lib/csv";
+import { sortByImageOrder } from "../src/lib/sort-image-files";
 
 type Row = Record<
   | "sku"
@@ -55,61 +66,6 @@ const CONDITIONS = [
   "fair",
 ] as const;
 
-/** Minimal RFC-4180-ish CSV parser: handles quoted fields with commas. */
-function parseCsv(text: string): Row[] {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
-  if (lines.length === 0) return [];
-
-  const parseLine = (line: string): string[] => {
-    const fields: string[] = [];
-    let cur = "";
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (inQuotes) {
-        if (ch === '"' && line[i + 1] === '"') {
-          cur += '"';
-          i++;
-        } else if (ch === '"') {
-          inQuotes = false;
-        } else {
-          cur += ch;
-        }
-      } else if (ch === '"') {
-        inQuotes = true;
-      } else if (ch === ",") {
-        fields.push(cur);
-        cur = "";
-      } else {
-        cur += ch;
-      }
-    }
-    fields.push(cur);
-    return fields;
-  };
-
-  const header = parseLine(lines[0]).map((h) => h.trim());
-  return lines.slice(1).map((line) => {
-    const values = parseLine(line);
-    const row = {} as Row;
-    header.forEach((key, i) => {
-      (row as Record<string, string>)[key] = (values[i] ?? "").trim();
-    });
-    return row;
-  });
-}
-
-/** Bare "name.ext" sorts first (the primary/cover shot), then "-1, -2, ...
- * -11" suffixes sort numerically rather than alphabetically (so "-2" comes
- * before "-10"). */
-function sortImageFiles(files: string[]): string[] {
-  const suffixNum = (f: string) => {
-    const m = f.match(/-(\d+)\.\w+$/);
-    return m ? parseInt(m[1], 10) : -1;
-  };
-  return [...files].sort((a, b) => suffixNum(a) - suffixNum(b));
-}
-
 async function main() {
   const [csvPath, photosDir] = process.argv.slice(2);
   if (!csvPath || !photosDir) {
@@ -119,7 +75,7 @@ async function main() {
     process.exit(1);
   }
 
-  const rows = parseCsv(readFileSync(csvPath, "utf-8"));
+  const rows = parseCsv(readFileSync(csvPath, "utf-8")) as Row[];
   const publicDir = path.resolve(__dirname, "../public/products");
   const availableFolders = readdirSync(photosDir);
 
@@ -127,7 +83,10 @@ async function main() {
     if (!row.sku) continue;
 
     const folderName = availableFolders.find(
-      (f) => f === row.photo_folder_name || f.startsWith(`${row.sku}-`)
+      (f) =>
+        f === row.photo_folder_name ||
+        f === row.sku ||
+        f.startsWith(`${row.sku}-`)
     );
     if (!folderName) {
       console.log(
@@ -144,7 +103,7 @@ async function main() {
       console.log(`⚠ ${row.sku}: photo folder has no images, skipping`);
       continue;
     }
-    const ordered = sortImageFiles(files);
+    const ordered = sortByImageOrder(files, (f) => f);
 
     const destDir = path.join(publicDir, row.sku);
     mkdirSync(destDir, { recursive: true });

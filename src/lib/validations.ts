@@ -108,6 +108,27 @@ export const ProductFormSchema = z.object({
     ),
 });
 
+// Bulk import (src/app/admin/products/bulk, src/lib/actions/bulk-import.ts)
+// — one row of product-intake-template.csv. Deliberately reuses the exact
+// same field rules as ProductFormSchema (same SKU regex, same positive-price
+// check, etc.) so a listing behaves identically whether it was created one
+// at a time through "New listing" or in a batch here — just without the
+// per-item authentication fields, since bulk rows always use the same
+// Entrupy default (matching scripts/import-products.ts's long-standing
+// behavior) rather than asking for it per row.
+export const BulkImportRowSchema = z.object({
+  sku: ProductFormSchema.shape.sku,
+  brand: ProductFormSchema.shape.brand,
+  model: ProductFormSchema.shape.model,
+  title: ProductFormSchema.shape.title,
+  description: ProductFormSchema.shape.description,
+  category: ProductFormSchema.shape.category,
+  color: ProductFormSchema.shape.color,
+  condition: ProductFormSchema.shape.condition,
+  priceUsd: ProductFormSchema.shape.priceUsd,
+  isConsignment: z.boolean().default(false),
+});
+
 export const CONTACT_ATTENTION_OPTIONS = [
   "General Inquiry",
   "Order Support",
