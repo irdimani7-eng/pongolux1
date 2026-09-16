@@ -10,6 +10,13 @@ import { TrustBar } from "@/components/trust-bar";
 import { FeaturedBrands } from "@/components/featured-brands";
 import { EntrupyBadge } from "@/components/entrupy-badge";
 
+// The homepage doesn't read searchParams/cookies, so it can be cached and
+// re-generated in the background instead of hitting the database on every
+// single visit. 60s means a brand-new listing or a status flip (sold, price
+// drop) shows up within a minute — plenty fresh for a catalog that changes
+// a few times a week, not several times a second.
+export const revalidate = 60;
+
 export default async function HomePage() {
   const [allAvailable, mostWanted] = await Promise.all([
     listProducts({ excludeSold: true }),
@@ -39,7 +46,11 @@ export default async function HomePage() {
       <TrustBar />
 
       <section className="border-y border-border bg-muted/30 py-14">
-        <div className="mx-auto max-w-6xl px-6">
+        {/* Slightly wider than the site's usual max-w-6xl content width
+            (not full-bleed) — with 9 brand cards now, this section needs
+            a bit more room than other homepage sections to fit them all
+            on one row on desktop without scrolling. */}
+        <div className="mx-auto max-w-7xl px-6">
           <h2 className="mb-8 text-center font-(family-name:--font-display) text-2xl">
             Shop by brand
           </h2>

@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { toAbsoluteImageUrl } from "@/lib/format";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -525,4 +526,83 @@ export async function sendDreamInquiryEmail(params: {
     throw new Error(`Resend error (${error.name}): ${error.message}`);
   }
   console.log("Dream inquiry email sent, Resend id:", data?.id);
+}
+
+/** Sent by sendAbandonedCartReminders() (src/lib/abandoned-cart.ts) once a
+ * shopper's 15-minute reservation hold has expired without checking out.
+ * One email per cart, listing every item that hold covered — not one email
+ * per item — since a shopper who abandoned three items shouldn't get three
+ * separate messages. */
+export async function sendAbandonedCartReminderEmail(params: {
+  to: string;
+  items: {
+    sku: string;
+    brand: string;
+    title: string;
+    priceCents: number;
+    currency: string;
+    imageUrl: string | null;
+  }[];
+}) {
+  if (!resend) {
+    console.warn(
+      "RESEND_API_KEY not set — skipping abandoned-cart reminder for",
+      params.to
+    );
+    return;
+  }
+
+  const plural = params.items.length > 1;
+
+  const itemsHtml = params.items
+    .map(
+      (item) => `
+      <tr>
+        <td style="padding:10px 0;width:64px;">
+          ${
+            item.imageUrl
+              ? `<img src="${toAbsoluteImageUrl(item.imageUrl)}" width="56" height="56" style="border-radius:6px;object-fit:cover;display:block;" />`
+              : ""
+          }
+        </td>
+        <td style="padding:10px 0 10px 12px;">
+          <div style="font-weight:600;">${item.brand} ${item.title}</div>
+          <div style="color:#78716c;">$${(item.priceCents / 100).toFixed(2)}</div>
+        </td>
+        <td style="padding:10px 0;text-align:right;white-space:nowrap;">
+          <a href="${SITE_URL}/product/${item.sku}" style="color:#a3814f;font-weight:600;text-decoration:none;">View item →</a>
+        </td>
+      </tr>`
+    )
+    .join("");
+
+  const body = `
+    <h1 style="margin:0 0 4px;font-size:20px;">Still thinking it over?</h1>
+    <p style="margin:0;color:#57534e;">
+      ${plural ? "These pieces were" : "This piece was"} held in your bag,
+      but the 15-minute hold has passed. Every item at PongoLux is
+      one-of-one, so ${plural ? "they're" : "it's"} first-come,
+      first-served again now — if you still want ${plural ? "them" : "it"},
+      the fastest way to make sure ${plural ? "they" : "it"} won't get away
+      is to grab ${plural ? "them" : "it"} again.
+    </p>
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;border-top:1px solid #e7e2da;">
+      ${itemsHtml}
+    </table>
+  `;
+
+  const { data, error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "PongoLux <info@pongolux.com>",
+    to: params.to,
+    subject: plural
+      ? "Your PongoLux picks are available again"
+      : "Still want it? It's available again",
+    html: emailShell(body),
+  });
+
+  if (error) {
+    console.error("Resend rejected abandoned-cart reminder email:", error);
+    throw new Error(`Resend error (${error.name}): ${error.message}`);
+  }
+  console.log("Abandoned-cart reminder email sent, Resend id:", data?.id);
 }

@@ -25,25 +25,29 @@ export async function primaryImageUrl(productId: string) {
   return image?.url ?? null;
 }
 
-export async function listProducts(
-  filters?: ShopFilters & {
-    /** Excludes sold items entirely (used for the homepage's "Newly
-     * listed" rail — a sold piece shouldn't be the first thing a new
-     * visitor sees). On /shop, leave this false: sold items still show
-     * (so a link to a just-sold piece doesn't 404), just sorted last —
-     * see the ORDER BY below. Archived items are always excluded, on
-     * every page, regardless of this flag. */
-    excludeSold?: boolean;
-    /** /shop/price-drops — only items with a compare-at price above the
-     * current price. */
-    onSaleOnly?: boolean;
-    /** /shop/most-wanted — only admin-curated picks. */
-    mostWantedOnly?: boolean;
-  }
-): Promise<ProductListItem[]> {
+type ListProductsFilters = ShopFilters & {
+  /** Excludes sold items entirely (used for the homepage's "Newly
+   * listed" rail — a sold piece shouldn't be the first thing a new
+   * visitor sees). On /shop, leave this false: sold items still show
+   * (so a link to a just-sold piece doesn't 404), just sorted last —
+   * see the ORDER BY below. Archived items are always excluded, on
+   * every page, regardless of this flag. */
+  excludeSold?: boolean;
+  /** /shop/price-drops — only items with a compare-at price above the
+   * current price. */
+  onSaleOnly?: boolean;
+  /** /shop/most-wanted — only admin-curated picks. */
+  mostWantedOnly?: boolean;
+};
+
+/** Shared WHERE-clause builder for listProducts/countProducts, so the two
+ * can never drift apart on what counts as "matching the current filters" —
+ * a page showing "47 results" while its own grid only has 40 of them would
+ * be a confusing, easy-to-introduce bug if this logic were duplicated. */
+function buildProductConditions(filters?: ListProductsFilters) {
   const priceRange = PRICE_RANGES.find((r) => r.value === filters?.priceRange);
 
-  const conditions = [
+  return [
     ne(products.status, "archived"),
     filters?.excludeSold ? ne(products.status, "sold") : undefined,
     filters?.onSaleOnly ? gt(products.compareAtPriceCents, products.priceCents) : undefined,
@@ -64,8 +68,22 @@ export async function listProducts(
         )
       : undefined,
   ].filter((c): c is NonNullable<typeof c> => Boolean(c));
+}
 
-  const rows = await db
+export async function listProducts(
+  filters?: ListProductsFilters & {
+    /** Caps how many rows come back — only /shop passes this (see
+     * PRODUCTS_PER_PAGE). Every other caller (homepage rails, most-wanted,
+     * price-drops, sitemap, the merchant feed) omits it and gets the full
+     * matching set, unchanged from before pagination existed. */
+    limit?: number;
+    /** Row offset for page 2+. Ignored unless `limit` is also set. */
+    offset?: number;
+  }
+): Promise<ProductListItem[]> {
+  const conditions = buildProductConditions(filters);
+
+  let query = db
     .select()
     .from(products)
     .where(and(...conditions))
@@ -74,7 +92,13 @@ export async function listProducts(
     .orderBy(
       sql`case when ${products.status} = 'sold' then 1 else 0 end`,
       desc(products.createdAt)
-    );
+    )
+    .$dynamic();
+
+  if (filters?.limit != null) query = query.limit(filters.limit);
+  if (filters?.offset != null) query = query.offset(filters.offset);
+
+  const rows = await query;
 
   return Promise.all(
     rows.map(async (product) => ({
@@ -93,6 +117,20 @@ export async function listProducts(
       imageUrl: await primaryImageUrl(product.id),
     }))
   );
+}
+
+/** Total row count matching the same filters listProducts would use —
+ * needed so /shop can render "Page 2 of 5" and Prev/Next without pulling
+ * every matching row just to count them. */
+export async function countProducts(
+  filters?: ListProductsFilters
+): Promise<number> {
+  const conditions = buildProductConditions(filters);
+  const [row] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(products)
+    .where(and(...conditions));
+  return row?.count ?? 0;
 }
 
 /** Distinct brand/color values currently in the catalog, for the shop filter

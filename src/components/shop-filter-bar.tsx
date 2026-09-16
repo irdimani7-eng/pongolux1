@@ -27,6 +27,10 @@ export function ShopFilterBar({
     } else {
       params.delete(key);
     }
+    // Changing a filter invalidates whatever page you were on — always
+    // land back on page 1 of the new result set rather than page 4 of a
+    // filter that might only have one page of matches.
+    params.delete("page");
     router.push(`${pathname}?${params.toString()}`);
   }
 

@@ -10,6 +10,10 @@ export const metadata = {
     "Our most sought-after authenticated designer handbags, hand-picked by the PongoLux team.",
 };
 
+// No searchParams/cookies read here, so this can be cached and refreshed
+// in the background instead of querying the database on every visit.
+export const revalidate = 60;
+
 export default async function MostWantedPage() {
   const products = await listProducts({ mostWantedOnly: true });
 

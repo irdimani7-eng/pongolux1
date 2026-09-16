@@ -596,3 +596,46 @@ export const ebayListingsRelations = relations(ebayListings, ({ one }) => ({
     references: [products.id],
   }),
 }));
+
+// ---------------------------------------------------------------------------
+// Abandoned-cart recovery — the cart itself is anonymous (see
+// src/lib/cart-id.ts), so there's no account to email by default. This maps
+// that anonymous cart to an email address once one is known (captured on
+// the cart page, or automatically for a signed-in shopper), and tracks
+// which expired reservation holds already got a reminder so the same hold
+// is never reminded about twice.
+// ---------------------------------------------------------------------------
+
+export const cartEmails = pgTable("cart_email", {
+  // The pongolux_cart_id cookie value — one row per cart, upserted whenever
+  // an email becomes known for it.
+  cartId: text("cart_id").primaryKey(),
+  email: text("email").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const abandonedCartReminders = pgTable(
+  "abandoned_cart_reminder",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    productId: text("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    cartId: text("cart_id").notNull(),
+    // The product's reservedUntil at the moment this reminder was sent —
+    // not just the product, since the same item can be reserved and expire
+    // many times over its life. The unique index below is what actually
+    // makes "already reminded" mean "already reminded about THIS hold".
+    reservedUntil: timestamp("reserved_until").notNull(),
+    sentAt: timestamp("sent_at").notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("abandoned_cart_reminder_product_hold_idx").on(
+      table.productId,
+      table.reservedUntil
+    ),
+  ]
+);

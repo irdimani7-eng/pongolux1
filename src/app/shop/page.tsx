@@ -2,7 +2,8 @@ import { ProductCard } from "@/components/product-card";
 import { ShopFilterBar } from "@/components/shop-filter-bar";
 import { HeroBanner } from "@/components/hero-banner";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { listProducts, getFilterOptions } from "@/lib/products";
+import { Pagination } from "@/components/pagination";
+import { listProducts, countProducts, getFilterOptions } from "@/lib/products";
 import { MARKETING_IMAGES } from "@/lib/marketing-images";
 import type { ShopFilters } from "@/lib/types";
 import type { Metadata } from "next";
@@ -12,6 +13,12 @@ export const metadata: Metadata = {
   description:
     "Browse authenticated, pre-owned designer handbags from Chanel, Louis Vuitton, Gucci, Hermès, and more — filter by brand, type, color, condition, and price.",
 };
+
+// 24 divides evenly into the 2/3/4-column grid at every breakpoint, so a
+// full page never ends on a lopsided row. Fine at today's catalog size —
+// this is here so /shop stays fast and navigable once the catalog grows
+// well past what fits comfortably on one page.
+const PRODUCTS_PER_PAGE = 24;
 
 function firstValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
@@ -29,11 +36,37 @@ export default async function ShopPage({
     priceRange: firstValue(params.priceRange),
     search: firstValue(params.search),
   };
+  const requestedPage = Number(firstValue(params.page));
+  const page =
+    Number.isFinite(requestedPage) && requestedPage > 1 ? Math.floor(requestedPage) : 1;
 
-  const [products, options] = await Promise.all([
-    listProducts(filters),
+  const [total, options] = await Promise.all([
+    countProducts(filters),
     getFilterOptions(),
   ]);
+  const totalPages = Math.max(1, Math.ceil(total / PRODUCTS_PER_PAGE));
+  // A stale/hand-edited ?page= beyond the last real page falls back to the
+  // last page instead of rendering an empty grid.
+  const effectivePage = Math.min(page, totalPages);
+
+  const products = await listProducts({
+    ...filters,
+    limit: PRODUCTS_PER_PAGE,
+    offset: (effectivePage - 1) * PRODUCTS_PER_PAGE,
+  });
+
+  function pageHref(targetPage: number) {
+    const search = new URLSearchParams();
+    if (filters.brand) search.set("brand", filters.brand);
+    if (filters.category) search.set("category", filters.category);
+    if (filters.color) search.set("color", filters.color);
+    if (filters.condition) search.set("condition", filters.condition);
+    if (filters.priceRange) search.set("priceRange", filters.priceRange);
+    if (filters.search) search.set("search", filters.search);
+    if (targetPage > 1) search.set("page", String(targetPage));
+    const qs = search.toString();
+    return qs ? `/shop?${qs}` : "/shop";
+  }
 
   // No matches for the current filters — show a few other available pieces
   // instead of leaving the page empty, so the visit isn't a dead end.
@@ -77,11 +110,14 @@ export default async function ShopPage({
             )}
           </div>
         ) : (
-          <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
-            {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          <>
+            <div className="mt-10 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
+              {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+            <Pagination page={effectivePage} totalPages={totalPages} buildHref={pageHref} />
+          </>
         )}
       </div>
     </div>

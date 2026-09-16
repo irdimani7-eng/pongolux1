@@ -9,8 +9,16 @@ import { WishlistButton } from "@/components/wishlist-button";
 import { RecentlyViewedTracker } from "@/components/recently-viewed-tracker";
 import { RecentlyViewed } from "@/components/recently-viewed";
 import { EntrupyBadge, EntrupyCertificateLink } from "@/components/entrupy-badge";
+import { CheckoutTrustStrip } from "@/components/checkout-trust-strip";
 import { ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
+
+// Product pages read the [sku] route param, not searchParams/cookies, so
+// each one can be cached and revalidated in the background rather than
+// hitting the database on every visit — a real speed win for the page most
+// likely to get repeat traffic (shared links, Google Shopping clicks).
+// 60s keeps a "just sold"/price change from lingering stale for long.
+export const revalidate = 60;
 
 export async function generateMetadata({
   params,
@@ -153,6 +161,7 @@ export default async function ProductPage({
             </div>
             <WishlistButton productId={product.id} variant="labeled" />
           </div>
+          <CheckoutTrustStrip className="mt-3" />
 
           {product.authentication && (
             <div className="mt-6 flex items-start gap-3 rounded-lg border border-border bg-muted/40 p-4 text-sm">

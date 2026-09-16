@@ -10,6 +10,10 @@ export const metadata = {
     "Authenticated designer handbags with a new, lower price — shop markdowns on Chanel, Louis Vuitton, Gucci, and more at PongoLux.",
 };
 
+// No searchParams/cookies read here, so this can be cached and refreshed
+// in the background instead of querying the database on every visit.
+export const revalidate = 60;
+
 export default async function PriceDropsPage() {
   const products = await listProducts({ onSaleOnly: true });
 

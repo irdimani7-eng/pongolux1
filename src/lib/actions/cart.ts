@@ -1,11 +1,39 @@
 "use server";
 
 import { db } from "@/db";
-import { products } from "@/db/schema";
+import { products, cartEmails } from "@/db/schema";
 import { and, eq, or, isNull, lt } from "drizzle-orm";
 import { getOrCreateCartId } from "@/lib/cart-id";
+import { z } from "zod";
 
 const RESERVATION_MINUTES = 15;
+
+const CartEmailSchema = z.string().trim().toLowerCase().email();
+
+/**
+ * Associates an email with this shopper's anonymous cart, so an abandoned
+ * reservation hold (see sendAbandonedCartReminders in src/lib/abandoned-
+ * cart.ts) has somewhere to send a reminder. Called either automatically
+ * with a signed-in shopper's session email, or from the optional email
+ * field on the cart page for a signed-out one. Silent no-op on an invalid
+ * email — this is a soft, optional capture, not a validated form field.
+ */
+export async function saveCartEmailAction(
+  email: string
+): Promise<{ ok: boolean }> {
+  const parsed = CartEmailSchema.safeParse(email);
+  if (!parsed.success) return { ok: false };
+
+  const cartId = await getOrCreateCartId();
+  await db
+    .insert(cartEmails)
+    .values({ cartId, email: parsed.data })
+    .onConflictDoUpdate({
+      target: cartEmails.cartId,
+      set: { email: parsed.data, updatedAt: new Date() },
+    });
+  return { ok: true };
+}
 
 /**
  * Attempts to hold a one-of-one item for this shopper's cart. Since every
