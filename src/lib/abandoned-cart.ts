@@ -26,9 +26,9 @@ const GRACE_MINUTES = 15;
  * rather than one per item.
  *
  * Meant to be called on a schedule — see src/app/api/cron/abandoned-carts/
- * route.ts, which mirrors the same external-scheduler pattern already used
- * for src/app/api/cron/ebay-orders/route.ts (Vercel Hobby's cron caps don't
- * apply to an externally-triggered route).
+ * route.ts, which relies on a free external scheduler rather than Vercel's
+ * own cron config (Vercel Hobby's cron caps don't apply to an
+ * externally-triggered route).
  */
 export async function sendAbandonedCartReminders(): Promise<{
   ok: boolean;

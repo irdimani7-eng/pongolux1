@@ -11,15 +11,12 @@ export const dynamic = "force-dynamic";
  * sendAbandonedCartReminders() in src/lib/abandoned-cart.ts for the actual
  * logic. Meant to be hit on a schedule, not by a browser.
  *
- * Same pattern as src/app/api/cron/ebay-orders/route.ts (see that file's
- * comment for the full reasoning): deliberately NOT wired up via a
- * vercel.json `crons` entry, since this project is still on Vercel's Hobby
- * plan, which caps cron jobs at once a day — far too infrequent for a
- * 15-minute reservation hold. Recommended setup instead: a free external
- * scheduler (e.g. cron-job.org) hitting
+ * Deliberately NOT wired up via a vercel.json `crons` entry, since this
+ * project is still on Vercel's Hobby plan, which caps cron jobs at once a
+ * day — far too infrequent for a 15-minute reservation hold. Recommended
+ * setup instead: a free external scheduler (e.g. cron-job.org) hitting
  *   https://www.pongolux.com/api/cron/abandoned-carts?secret=<CRON_SECRET>
- * every 10–15 minutes. Uses the same CRON_SECRET env var as the eBay sync
- * job — no new secret to set up if that's already configured.
+ * every 10–15 minutes.
  *
  * Without CRON_SECRET set at all, this route refuses every request.
  */
