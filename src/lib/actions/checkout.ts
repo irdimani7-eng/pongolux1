@@ -7,7 +7,8 @@ import { getOrCreateCartId } from "@/lib/cart-id";
 import { getStripe } from "@/lib/stripe";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { SHIPPING_INSURANCE_CENTS } from "@/lib/format";
+import { SHIPPING_INSURANCE_CENTS, CHECKOUT_HOLD_MINUTES } from "@/lib/format";
+import { extendReservationForCheckout } from "@/lib/actions/cart";
 
 export async function createCheckoutSession(
   productIds: string[],
@@ -50,6 +51,24 @@ export async function createCheckoutSession(
   }
   if (items.length !== productIds.length) {
     return { ok: false as const, message: "Some items in your cart no longer exist." };
+  }
+
+  // Extend this cart's hold on every item to cover the entire Stripe
+  // Checkout session about to be created below (whose own `expires_at` is
+  // set to the same CHECKOUT_HOLD_MINUTES). Without this, the original
+  // 15-minute cart hold could lapse while the shopper is still sitting on
+  // Stripe's payment page — long enough for someone else to grab a
+  // one-of-one item out from under them and for both people to end up
+  // paying for the same bag. This call is atomic and cart-scoped (see
+  // extendReservationForCheckout in src/lib/actions/cart.ts), so it can
+  // only ever claim items this cart is genuinely entitled to hold.
+  const extension = await extendReservationForCheckout(productIds);
+  if (!extension.ok) {
+    const lost = items.find((item) => extension.failedIds.includes(item.id));
+    return {
+      ok: false as const,
+      message: `${lost?.title ?? "An item"} in your cart was just claimed by someone else. Please remove it and try again.`,
+    };
   }
 
   const subtotalCents = items.reduce((sum, item) => sum + item.priceCents, 0);
@@ -130,6 +149,13 @@ export async function createCheckoutSession(
       metadata: { orderId: order.id },
       success_url: `${siteUrl}/checkout/success?order=${order.id}`,
       cancel_url: `${siteUrl}/cart`,
+      // Stripe's minimum is 30 minutes from creation — matches
+      // CHECKOUT_HOLD_MINUTES exactly, so the reservation hold extended
+      // above and this Checkout session always expire together. If Stripe
+      // ever closes this session for any reason, the hold lapses at the
+      // same moment and the item becomes available again rather than
+      // staying locked past the point anyone could still be paying for it.
+      expires_at: Math.floor(Date.now() / 1000) + CHECKOUT_HOLD_MINUTES * 60,
     });
 
     await db

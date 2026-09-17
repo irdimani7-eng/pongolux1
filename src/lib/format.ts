@@ -2,6 +2,19 @@
 // optional add-on. See /shipping-returns for the full policy.
 export const SHIPPING_INSURANCE_CENTS = 2000;
 
+// How long a Stripe Checkout session (and the matching product reservation
+// hold extended right before it's created) stays valid for. Lives here
+// rather than in src/lib/actions/cart.ts because that file has a "use
+// server" directive — every export from a "use server" module has to be an
+// async function, so a plain numeric constant can't live there (it silently
+// breaks the whole module's exports at build time if it does). Used by
+// createCheckoutSession (src/lib/actions/checkout.ts) for the Stripe
+// session's own `expires_at`, and by extendReservationForCheckout
+// (src/lib/actions/cart.ts) for how far out to push reservedUntil — kept in
+// one place so the two timers can't drift apart. Stripe's own minimum for
+// `expires_at` is 30 minutes from creation, so this can't go lower.
+export const CHECKOUT_HOLD_MINUTES = 30;
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 /** Some product photo URLs in the database are absolute (anything

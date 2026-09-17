@@ -1,8 +1,12 @@
 import { getStripe } from "@/lib/stripe";
 import { db } from "@/db";
 import { orders, orderItems, products, addresses } from "@/db/schema";
-import { eq } from "drizzle-orm";
-import { sendOrderConfirmationEmail, sendNewOrderNotificationEmail } from "@/lib/email";
+import { and, eq, ne } from "drizzle-orm";
+import {
+  sendOrderConfirmationEmail,
+  sendNewOrderNotificationEmail,
+  sendDoubleSaleAlertEmail,
+} from "@/lib/email";
 import type Stripe from "stripe";
 
 export async function POST(req: Request) {
@@ -90,12 +94,32 @@ export async function POST(req: Request) {
       .from(orderItems)
       .where(eq(orderItems.orderId, orderId));
 
+    // Guard against the one-of-one double-sell scenario directly, as a
+    // second line of defense behind the checkout-time reservation extension
+    // in src/lib/actions/checkout.ts (which should prevent this from ever
+    // actually happening). The WHERE clause makes this update a no-op if the
+    // product is somehow already marked sold — e.g. two completed Stripe
+    // sessions for the same item landing on this webhook — instead of
+    // silently overwriting whichever sale got here first. Money has already
+    // moved for BOTH orders in that scenario, so this can't fix it alone;
+    // it can only make sure it's impossible to miss.
     for (const item of items) {
       if (!item.productId) continue;
-      await db
+      const updated = await db
         .update(products)
         .set({ status: "sold", reservedUntil: null, reservedByCartId: null })
-        .where(eq(products.id, item.productId));
+        .where(and(eq(products.id, item.productId), ne(products.status, "sold")))
+        .returning({ id: products.id });
+
+      if (updated.length === 0) {
+        const message = `Order ${order.id} was just paid for product ${item.productId}, but that product was already marked sold — likely two completed Stripe checkouts for the same one-of-one item. This customer was charged for something that may already be promised to someone else. Needs a manual look: check /admin/orders and the Stripe Dashboard for order ${order.id}, and refund or find a resolution with the customer directly.`;
+        console.error(message);
+        try {
+          await sendDoubleSaleAlertEmail({ orderId: order.id, productId: item.productId });
+        } catch (err) {
+          console.error("Also failed to send the double-sale alert email itself", err);
+        }
+      }
     }
 
     let shippingAddress: {

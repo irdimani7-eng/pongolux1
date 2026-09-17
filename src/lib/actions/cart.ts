@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { products, cartEmails } from "@/db/schema";
 import { and, eq, or, isNull, lt } from "drizzle-orm";
 import { getOrCreateCartId } from "@/lib/cart-id";
+import { CHECKOUT_HOLD_MINUTES } from "@/lib/format";
 import { z } from "zod";
 
 const RESERVATION_MINUTES = 15;
@@ -97,6 +98,49 @@ export async function reserveProductAction(
   }
 
   return { ok: true };
+}
+
+/**
+ * Extends (or freshly claims) the reservation hold on every given product
+ * to last through an entire Stripe Checkout session, for this cart only —
+ * called by createCheckoutSession right before it creates that session, so
+ * the two timers are set together and can't drift apart. Reuses the same
+ * atomic conditional UPDATE as reserveProductAction (only succeeds if the
+ * item is available, already held by this cart, or its hold has lapsed),
+ * so this can never steal an item another cart is actively holding.
+ *
+ * Returns the ids of any product that could NOT be secured for this cart —
+ * the caller should treat those as unavailable and stop before ever
+ * creating a Stripe session or an order row for them.
+ */
+export async function extendReservationForCheckout(
+  productIds: string[]
+): Promise<{ ok: boolean; failedIds: string[]; reservedUntil: Date }> {
+  const cartId = await getOrCreateCartId();
+  const now = new Date();
+  const reservedUntil = new Date(now.getTime() + CHECKOUT_HOLD_MINUTES * 60_000);
+
+  const failedIds: string[] = [];
+  for (const productId of productIds) {
+    const result = await db
+      .update(products)
+      .set({ status: "reserved", reservedUntil, reservedByCartId: cartId })
+      .where(
+        and(
+          eq(products.id, productId),
+          or(
+            eq(products.status, "available"),
+            eq(products.reservedByCartId, cartId),
+            isNull(products.reservedUntil),
+            lt(products.reservedUntil, now)
+          )
+        )
+      )
+      .returning({ id: products.id });
+    if (result.length === 0) failedIds.push(productId);
+  }
+
+  return { ok: failedIds.length === 0, failedIds, reservedUntil };
 }
 
 export async function releaseProductAction(productId: string) {
