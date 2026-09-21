@@ -4,6 +4,7 @@ import { Suspense, useActionState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { login } from "@/lib/actions/auth";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 function LoginForm() {
   const [state, formAction, pending] = useActionState(login, null);
@@ -39,6 +40,7 @@ function LoginForm() {
             className="mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
           />
         </div>
+        <TurnstileWidget />
         {state?.error && <p className="text-sm text-danger">{state.error}</p>}
         <button
           type="submit"

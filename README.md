@@ -71,6 +71,10 @@ each one:
   URL. See that route's own comments for how to actually schedule it — a
   free external scheduler like cron-job.org works on any Vercel plan; a
   `vercel.json` cron entry needs Vercel Pro.
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` — bot check on
+  login, signup, and the contact form. See "Bot and spam protection" below.
+- `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` — rate limiting on
+  login, signup, and the contact form. See "Bot and spam protection" below.
 
 ## Why Drizzle, not Prisma
 
@@ -182,6 +186,42 @@ this can change.
 **Test before relying on it**: after enabling, place a test purchase (test
 mode) with an Illinois shipping address and confirm tax shows up on the
 Checkout page and on the resulting order in `/admin/orders`.
+
+## Bot and spam protection
+
+Login, signup, and the contact form have two layers of protection against
+bots and scripts. Both are **off by default and completely harmless if you
+never set them up** — the site works exactly as it does today either way.
+
+**1. Cloudflare Turnstile** — a free, usually-invisible "prove you're not a
+bot" widget (not the old click-the-traffic-lights CAPTCHA — most real
+visitors never see anything at all). To turn it on:
+
+1. Go to [dash.cloudflare.com](https://dash.cloudflare.com), sign in or
+   create a free account, and open **Turnstile** in the left sidebar.
+2. Click **Add site**, enter `pongolux.com` as the domain, and choose the
+   "Managed" widget type (the default).
+3. Cloudflare gives you two keys — a **Site Key** and a **Secret Key**.
+4. In Vercel: your project → **Settings** → **Environment Variables**, add
+   the Site Key as `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and the Secret Key as
+   `TURNSTILE_SECRET_KEY`, then redeploy.
+
+**2. Rate limiting** — caps how many login/signup/contact attempts can come
+from one visitor in a short window, so a script can't hammer those forms.
+Backed by a free Upstash Redis database:
+
+1. Go to [upstash.com](https://upstash.com), sign in or create a free
+   account, and create a new **Redis** database (any region close to your
+   Vercel deployment is fine).
+2. On the database's page, find the **REST API** section — it shows a URL
+   and a token.
+3. In Vercel: add those as `UPSTASH_REDIS_REST_URL` and
+   `UPSTASH_REDIS_REST_TOKEN`, then redeploy.
+
+No code changes or `npm install` are needed on your end for either of
+these — the required packages are already in `package.json`, so Vercel
+installs them automatically on the next deploy. You only need to create
+the two free accounts above and paste the resulting keys into Vercel.
 
 ## Placeholder content — replace before launch
 

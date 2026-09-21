@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { CONTACT_ATTENTION_OPTIONS } from "@/lib/validations";
 import { submitContactForm } from "@/lib/actions/contact";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 
 const inputClass =
   "mt-1 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm";
@@ -90,6 +91,7 @@ export function ContactForm() {
           className={inputClass}
         />
       </div>
+      <TurnstileWidget />
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
       <button
         type="submit"

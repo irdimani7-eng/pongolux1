@@ -6,6 +6,13 @@ import { SignupSchema } from "@/lib/validations";
 import { hashPassword, signIn } from "@/lib/auth";
 import { eq } from "drizzle-orm";
 import { redirect } from "next/navigation";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { verifyTurnstileToken } from "@/lib/turnstile";
+
+const BOT_CHECK_FAILED_MESSAGE =
+  "We couldn't verify you're not a bot. Please try again.";
+const RATE_LIMITED_MESSAGE =
+  "Too many attempts — please wait a bit before trying again.";
 
 export type AuthActionState = { error: string | null } | null;
 
@@ -32,6 +39,14 @@ export async function signup(
   _prevState: AuthActionState,
   formData: FormData
 ): Promise<AuthActionState> {
+  const rateLimit = await checkRateLimit("signup");
+  if (!rateLimit.allowed) return { error: RATE_LIMITED_MESSAGE };
+
+  const turnstile = await verifyTurnstileToken(
+    formData.get("cf-turnstile-response")
+  );
+  if (!turnstile.ok) return { error: BOT_CHECK_FAILED_MESSAGE };
+
   const parsed = SignupSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),
@@ -73,6 +88,14 @@ export async function login(
   _prevState: AuthActionState,
   formData: FormData
 ): Promise<AuthActionState> {
+  const rateLimit = await checkRateLimit("login");
+  if (!rateLimit.allowed) return { error: RATE_LIMITED_MESSAGE };
+
+  const turnstile = await verifyTurnstileToken(
+    formData.get("cf-turnstile-response")
+  );
+  if (!turnstile.ok) return { error: BOT_CHECK_FAILED_MESSAGE };
+
   const email = formData.get("email");
   const password = formData.get("password");
   const redirectTo = safeRedirectTarget(formData.get("callbackUrl"));
