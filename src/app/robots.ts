@@ -31,6 +31,8 @@ const AI_CRAWLER_USER_AGENTS = [
   "YouBot",
 ] as const;
 
+const OPENAI_FEED_FETCHERS: readonly string[] = ["ChatGPT-User", "OAI-SearchBot"];
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
@@ -42,7 +44,7 @@ export default function robots(): MetadataRoute.Robots {
         // A longer, more specific "Allow" always wins over a shorter
         // "Disallow" on the same path per the robots.txt spec, regardless of
         // the order they're listed in.
-        allow: ["/", "/api/merchant-feed"],
+        allow: ["/", "/api/merchant-feed", "/api/chatgpt-feed"],
         disallow: [
           "/admin",
           "/admin/",
@@ -57,10 +59,14 @@ export default function robots(): MetadataRoute.Robots {
       // Every AI crawler above gets its own blanket disallow, entirely
       // separate from the "*" rule above — so this can never accidentally
       // loosen (or need to duplicate) the real-search-engine rules.
-      ...AI_CRAWLER_USER_AGENTS.map((userAgent) => ({
-        userAgent,
-        disallow: "/",
-      })),
+      // Exception: OpenAI's fetchers may read the ChatGPT product feed (and
+      // nothing else), so the hosted-URL feed in ChatGPT's merchant setup can
+      // refresh stock. GPTBot (training) is not given this exception.
+      ...AI_CRAWLER_USER_AGENTS.map((userAgent) =>
+        OPENAI_FEED_FETCHERS.includes(userAgent)
+          ? { userAgent, allow: "/api/chatgpt-feed", disallow: "/" }
+          : { userAgent, disallow: "/" }
+      ),
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
